@@ -48,7 +48,14 @@ button:disabled { opacity: 0.4; cursor: default; }
 svg { display: block; }
 
 /* reading area */
-#stage { position: absolute; left: 0; right: 0; top: 0; bottom: 60px; overflow: auto; -webkit-overflow-scrolling: touch; }
+header {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 10;
+  background: var(--panel); border-bottom: 1px solid var(--line);
+  padding: calc(7px + env(safe-area-inset-top, 0px)) calc(8px + env(safe-area-inset-right, 0px)) 7px calc(8px + env(safe-area-inset-left, 0px));
+  display: flex; align-items: center; gap: 6px;
+}
+header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
+#stage { position: absolute; left: 0; right: 0; top: 52px; bottom: 60px; overflow: auto; -webkit-overflow-scrolling: touch; }
 #sheet { position: relative; margin: 4px auto; background: #fff; box-shadow: 0 2px 14px var(--shadow); }
 #pg { position: absolute; left: 0; top: 0; display: block; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; pointer-events: none; }
 #ink { position: absolute; left: 0; top: 0; display: block; mix-blend-mode: multiply; }
@@ -58,7 +65,7 @@ svg { display: block; }
 #msg button { margin-top: 12px; }
 
 /* page-turn buttons on each side */
-#sides { position: absolute; left: 0; right: 0; top: 0; bottom: 60px; pointer-events: none; z-index: 5; }
+#sides { position: absolute; left: 0; right: 0; top: 52px; bottom: 60px; pointer-events: none; z-index: 5; }
 .turn {
   position: absolute; top: 50%; transform: translateY(-50%);
   width: 40px; height: min(46%, 300px); min-height: 120px; padding: 0;
@@ -104,8 +111,9 @@ footer {
 .seg button:first-child { border-radius: 8px 0 0 8px; }
 .seg button:last-child { border-radius: 0 8px 8px 0; }
 .seg button + button { border-left-width: 0; }
-#pageNo { width: 4.2em; text-align: center; padding: 7px 4px; min-height: 38px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); }
-#surahSel { flex: 1 1 180px; min-width: 0; }
+#pageNo { width: 3.6em; flex: none; text-align: center; padding: 7px 4px; min-height: 38px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); }
+#surahSel { flex: 1 1 0; min-width: 0; }
+#juzSel { flex: none; }
 .sl { display: flex; align-items: center; gap: 10px; font-size: 14px; }
 .sl span { min-width: 7.5em; color: var(--muted); }
 .sl input[type=range] { flex: 1; accent-color: var(--accent); }
@@ -124,6 +132,12 @@ footer {
 </head>
 <body>
 <div id="app">
+  <header>
+    <input id="pageNo" type="number" inputmode="numeric" min="1" max="604" aria-label="Page">
+    <span class="of" id="ofLabel">of 604</span>
+    <select id="surahSel" aria-label="Go to surah"></select>
+    <select id="juzSel" aria-label="Go to juz"></select>
+  </header>
   <main id="stage">
     <div id="sheet" hidden>
       <img id="pg" alt="" draggable="false">
@@ -152,20 +166,6 @@ footer {
     <button id="menuClose" class="primary">Close</button>
   </div>
   <div class="body">
-    <section>
-      <h3>Go to</h3>
-      <div class="row">
-        <label for="pageNo" class="muted" style="color:var(--muted)">Page</label>
-        <input id="pageNo" type="number" inputmode="numeric" min="1" max="604">
-        <button id="goBtn">Go</button>
-        <span class="grow"></span>
-      </div>
-      <div class="row">
-        <select id="surahSel" aria-label="Go to surah"></select>
-        <select id="juzSel" aria-label="Go to juz"></select>
-      </div>
-    </section>
-
     <section>
       <h3>Drawing tool</h3>
       <p>The first button on the bottom bar uses this tool.</p>
@@ -360,13 +360,15 @@ footer {
     sheet.hidden = false;
     layout();
     updateTurns();
+    updateNav();
     [i + 1, i + 2, i - 1].forEach(function (n) { if (n >= FIRST && n <= LAST) { var p = new Image(); p.src = pageUrl(n); } });
   }
 
   function layout() {
     var footH = document.querySelector("footer").offsetHeight;
-    stage.style.bottom = footH + "px";
-    $("#sides").style.bottom = footH + "px";
+    var headH = document.querySelector("header").offsetHeight;
+    stage.style.bottom = footH + "px"; stage.style.top = headH + "px";
+    $("#sides").style.bottom = footH + "px"; $("#sides").style.top = headH + "px";
     var nw = img.naturalWidth || 750, nh = img.naturalHeight || 1072;
     var availW = Math.max(120, stage.clientWidth - 8);
     var availH = Math.max(160, stage.clientHeight - 8);
@@ -589,22 +591,31 @@ footer {
   $("#undoBtn").addEventListener("click", undo);
 
   /* ---------- menu ---------- */
-  function openMenu() {
+  function position() {
     var m = idx - OFFSET, inBook = m >= 1 && m <= MUSHAF_PAGES;
-    var where = "";
-    if (inBook) {
-      var c = 0;
-      for (var k = 0; k < SURAHS.length; k++) if (SURAHS[k][1] <= m) c = k;
-      for (var j = 0; j < SURAHS.length; j++) if (SURAHS[j][1] === m) { c = j; break; }
-      var jz = 0;
-      for (var q = 0; q < JUZ.length; q++) if (JUZ[q] <= m) jz = q;
-      surahSel.value = String(c); juzSel.value = String(jz);
-      pageNo.value = m;
-      where = "Page " + m + " · " + SURAHS[c][0] + " · Juz " + (jz + 1);
+    if (!inBook) return { m: m, inBook: false };
+    var c = 0;
+    for (var k = 0; k < SURAHS.length; k++) if (SURAHS[k][1] <= m) c = k;
+    for (var j = 0; j < SURAHS.length; j++) if (SURAHS[j][1] === m) { c = j; break; }
+    var jz = 0;
+    for (var q = 0; q < JUZ.length; q++) if (JUZ[q] <= m) jz = q;
+    return { m: m, inBook: true, surah: c, juz: jz };
+  }
+  function updateNav() {
+    var p = position();
+    if (p.inBook) {
+      pageNo.value = p.m; pageNo.placeholder = "";
+      surahSel.value = String(p.surah); juzSel.value = String(p.juz);
+      $("#ofLabel").textContent = "of 604";
     } else {
-      surahSel.value = ""; juzSel.value = ""; pageNo.value = "";
-      where = m < 1 ? "Front pages" : "Back pages";
+      pageNo.value = ""; pageNo.placeholder = "–";
+      surahSel.value = ""; juzSel.value = "";
+      $("#ofLabel").textContent = p.m < 1 ? "front" : "back";
     }
+  }
+  function openMenu() {
+    var p = position();
+    var where = p.inBook ? "Page " + p.m + " · " + SURAHS[p.surah][0] + " · Juz " + (p.juz + 1) : (p.m < 1 ? "Front pages" : "Back pages");
     $("#where").textContent = where;
     $("#bk").value = ""; $("#bkMsg").textContent = "";
     showLastBackup(); refreshOffline(); syncMenu();
@@ -622,10 +633,10 @@ footer {
     var o2 = document.createElement("option"); o2.value = ""; o2.textContent = "Juz"; o2.hidden = true; juzSel.appendChild(o2);
     JUZ.forEach(function (p, k) { var op = document.createElement("option"); op.value = k; op.textContent = "Juz " + (k + 1); juzSel.appendChild(op); });
   })();
-  surahSel.addEventListener("change", function () { if (surahSel.value !== "") { show(SURAHS[+surahSel.value][1] + OFFSET); closeMenu(); } });
-  juzSel.addEventListener("change", function () { if (juzSel.value !== "") { show(JUZ[+juzSel.value] + OFFSET); closeMenu(); } });
-  function goPage() { var m = parseInt(pageNo.value, 10); if (m >= 1 && m <= MUSHAF_PAGES) { show(m + OFFSET); closeMenu(); } }
-  $("#goBtn").addEventListener("click", goPage);
+  surahSel.addEventListener("change", function () { if (surahSel.value !== "") show(SURAHS[+surahSel.value][1] + OFFSET); });
+  juzSel.addEventListener("change", function () { if (juzSel.value !== "") show(JUZ[+juzSel.value] + OFFSET); });
+  function goPage() { var m = parseInt(pageNo.value, 10); if (m >= 1 && m <= MUSHAF_PAGES) { if (m + OFFSET !== idx) show(m + OFFSET); } else updateNav(); pageNo.blur(); }
+  pageNo.addEventListener("change", goPage);
   pageNo.addEventListener("keydown", function (e) { if (e.key === "Enter") goPage(); });
 
   function syncMenu() {

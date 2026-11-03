@@ -6,8 +6,8 @@
 <title>Mushaf Notes</title>
 <meta name="description" content="Read and annotate the Madinah Mushaf.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Mushaf">
@@ -247,7 +247,9 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
   function setStrokes(i, s) { ann[i] = { s: s, t: Date.now() }; saveLocal(); }
 
   /* ---------- page loading ---------- */
-  function pageUrl(i) { return "pages/" + String(i).padStart(3, "0") + ".jpg"; }
+  // pages may sit at the top of the site (001.jpg) or in a pages/ folder (pages/001.jpg)
+  function pageUrl(i) { return String(i).padStart(3, "0") + ".jpg"; }
+  function altUrl(i) { return "pages/" + String(i).padStart(3, "0") + ".jpg"; }
   var msg = $("#msg"), msgText = $("#msgText"), retryBtn = $("#retry");
   function showMsg(t, retry) { msg.style.display = "flex"; msgText.textContent = t; retryBtn.hidden = !retry; }
   function hideMsg() { msg.style.display = "none"; }
@@ -265,10 +267,13 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
     i = Math.max(FIRST, Math.min(LAST, i | 0));
     var my = ++showId;
     var src = pageUrl(i);
-    if (img.getAttribute("src") !== src) {
+    var have = img.getAttribute("src");
+    if (have !== src && have !== altUrl(i)) {
       var slow = setTimeout(function () { if (my === showId) showMsg("Loading page…", false); }, 350);
-      try { await loadImage(src); }
-      catch (e) {
+      var ok = false;
+      try { await loadImage(src); ok = true; } catch (e) {}
+      if (!ok) { try { await loadImage(altUrl(i)); src = altUrl(i); ok = true; } catch (e) {} }
+      if (!ok) {
         clearTimeout(slow);
         if (my === showId) {
           showMsg(navigator.onLine === false ? "This page is not saved for offline yet. Connect to the internet, or save all pages from the menu next time you are online." : "This page could not be loaded. Check your connection, then try again.", true);
@@ -628,7 +633,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
   var offRunning = false;
   async function countCached() {
     if (!("caches" in window)) return -1;
-    try { var c = await caches.open(PAGE_CACHE); var keys = await c.keys(); return keys.filter(function (r) { return /\/pages\/\d{3}\.jpg$/.test(r.url); }).length; }
+    try { var c = await caches.open(PAGE_CACHE); var keys = await c.keys(); return keys.filter(function (r) { return /\/(pages\/)?\d{3}\.jpg$/.test(r.url); }).length; }
     catch (e) { return -1; }
   }
   async function refreshOffline() {
@@ -650,9 +655,11 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
       while (next <= LAST) {
         var i = next++;
         var url = new URL(pageUrl(i), location.href).href;
+        var url2 = new URL(altUrl(i), location.href).href;
         try {
-          if (!(await cache.match(url))) {
+          if (!(await cache.match(url)) && !(await cache.match(url2))) {
             var r = await fetch(url);
+            if (!r.ok) { r = await fetch(url2); url = url2; }
             if (r.ok) await cache.put(url, r); else failed++;
           }
         } catch (e) { failed++; }

@@ -1,14 +1,14 @@
 /* Mushaf Notes service worker: keeps the app and pages available offline. */
-const SHELL_CACHE = "mn-shell-v1";
+const SHELL_CACHE = "mn-shell-v3";
 const PAGE_CACHE = "mn-pages-v1";
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/maskable-512.png",
-  "./icons/apple-touch-icon.png"
+  "./icon-192.png",
+  "./icon-512.png",
+  "./maskable-512.png",
+  "./apple-touch-icon.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -30,7 +30,7 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   // Page images never change: serve from the cache, fetch and keep them the first time.
-  if (/\/pages\/\d{3}\.jpg$/.test(url.pathname)) {
+  if (/\/(pages\/)?\d{3}\.jpg$/.test(url.pathname)) {
     event.respondWith(
       caches.open(PAGE_CACHE).then(async (cache) => {
         const hit = await cache.match(req);

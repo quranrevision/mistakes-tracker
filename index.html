@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mushaf Notes</title>
+<meta name="description" content="Read and annotate the Madinah Mushaf.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mushaf">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#dde2df" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121618" media="(prefers-color-scheme: dark)">
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
+  --stage: #dde2df; --panel: #f7f8f6; --ink: #17211c; --muted: #5f6b65; --line: #c3cbc6;
+  --accent: #14624a; --accent-ink: #ffffff; --btn: #ffffff; --shadow: rgba(20, 30, 25, 0.28);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --stage: #121618; --panel: #1c2225; --ink: #e5ece8; --muted: #93a19a;
+    --line: #333d41; --accent: #5cc9a0; --accent-ink: #0d1a14; --btn: #252d31; --shadow: rgba(0,0,0,0.6);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --stage: #121618; --panel: #1c2225; --ink: #e5ece8; --muted: #93a19a;
+  --line: #333d41; --accent: #5cc9a0; --accent-ink: #0d1a14; --btn: #252d31; --shadow: rgba(0,0,0,0.6);
+}
+html, body { height: 100%; margin: 0; }
+html { background: var(--stage); }
+body { background: var(--stage); color: var(--ink); font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+#app { position: relative; height: 100%; overflow: hidden; }
+button, input, select { font: inherit; color: inherit; }
+button, select { background: var(--btn); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; min-height: 36px; cursor: pointer; }
+select { padding: 6px 6px; max-width: 100%; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.on, button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:disabled { opacity: 0.45; cursor: default; }
+header, footer {
+  position: fixed; left: 0; right: 0; z-index: 10;
+  background: var(--panel);
+  background: color-mix(in srgb, var(--panel) 93%, transparent);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  transition: transform .22s ease, opacity .22s ease;
+}
+header { top: 0; border-bottom: 1px solid var(--line); padding: calc(7px + env(safe-area-inset-top, 0px)) calc(10px + env(safe-area-inset-right, 0px)) 7px calc(10px + env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 6px; }
+footer { bottom: 0; border-top: 1px solid var(--line); padding: 7px calc(10px + env(safe-area-inset-right, 0px)) calc(7px + env(safe-area-inset-bottom, 0px)) calc(10px + env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 7px; }
+body:not(.bars) header { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+body:not(.bars) footer { transform: translateY(100%); opacity: 0; pointer-events: none; }
+#fab {
+  position: fixed; z-index: 11;
+  right: calc(12px + env(safe-area-inset-right, 0px));
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  width: 46px; height: 46px; min-height: 46px; padding: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--panel); color: var(--ink); opacity: .72; box-shadow: 0 2px 10px var(--shadow);
+}
+#fab:hover, #fab:focus-visible { opacity: 1; }
+body.bars #fab { opacity: 0; pointer-events: none; }
+#fab .dot { position: absolute; top: 7px; right: 7px; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--panel); }
+.row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.grow { flex: 1; }
+.nav { font-size: 20px; line-height: 1; min-width: 42px; }
+#pageNo { width: 3.6em; text-align: center; padding: 6px 4px; min-height: 36px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); }
+.muted { color: var(--muted); font-size: 13px; }
+header .row:nth-child(2) { flex-wrap: nowrap; }
+#surahSel { flex: 1 1 0; min-width: 84px; }
+#juzSel, #hideBtn { flex: none; }
+footer button { font-size: 14px; padding: 6px 9px; }
+#colors { gap: 5px; }
+.swatch { width: 28px; height: 28px; min-height: 28px; padding: 0; border-radius: 50%; border: 2px solid var(--line); }
+.swatch.on { border-color: var(--ink); box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--ink); }
+.sl { display: flex; align-items: center; gap: 8px; flex: 1 1 140px; min-width: 130px; font-size: 13px; color: var(--muted); }
+.sl input[type=range] { flex: 1; accent-color: var(--accent); min-width: 60px; }
+.sl b { color: var(--ink); font-weight: 600; min-width: 2.8em; text-align: right; }
+#stage { position: absolute; inset: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
+#sheet { position: relative; margin: 4px auto; background: #fff; box-shadow: 0 2px 14px var(--shadow); }
+#pg { position: absolute; left: 0; top: 0; display: block; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; pointer-events: none; }
+#ink { position: absolute; left: 0; top: 0; display: block; mix-blend-mode: multiply; }
+#msg { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; text-align: center; pointer-events: none; }
+#msg .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; max-width: 320px; pointer-events: auto; }
+#msg p { margin: 0; }
+#msg button { margin-top: 12px; }
+#panel { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 20; }
+#panel.open { display: flex; }
+#panel .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; width: min(520px, 100%); max-height: 100%; overflow: auto; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; }
+#panel h2 { margin: 0; font-size: 17px; }
+#panel h3 { margin: 6px 0 0; font-size: 15px; }
+#panel p { margin: 0; color: var(--muted); font-size: 13.5px; }
+#panel textarea { width: 100%; box-sizing: border-box; height: 90px; background: var(--btn); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: 12px/1.3 ui-monospace, Menlo, Consolas, monospace; color: var(--ink); }
+#offBar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+#offBar i { display: block; height: 100%; width: 0; background: var(--accent); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
+@media (prefers-reduced-motion: reduce) { header, footer { transition: none; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="row">
+      <button id="next" class="nav" aria-label="Next page" title="Next page">‹</button>
+      <input id="pageNo" type="number" inputmode="numeric" min="1" max="604" aria-label="Mushaf page">
+      <span class="muted" id="ofLabel">of 604</span>
+      <button id="prev" class="nav" aria-label="Previous page" title="Previous page">›</button>
+      <span class="grow"></span>
+      <button id="zout" aria-label="Zoom out">−</button>
+      <button id="zin" aria-label="Zoom in">+</button>
+      <button id="menuBtn">Menu</button>
+    </div>
+    <div class="row">
+      <select id="surahSel" aria-label="Go to surah"></select>
+      <select id="juzSel" aria-label="Go to juz"></select>
+      <button id="hideBtn">Done</button>
+    </div>
+  </header>
+
+  <main id="stage">
+    <div id="sheet" hidden>
+      <img id="pg" alt="" draggable="false">
+      <canvas id="ink"></canvas>
+    </div>
+    <div id="msg"><div class="card"><p id="msgText"></p><button id="retry" hidden>Try again</button></div></div>
+  </main>
+
+  <footer>
+    <div class="row">
+      <button data-tool="move">Move</button>
+      <button data-tool="pen">Pen</button>
+      <button data-tool="highlight">Highlight</button>
+      <button data-tool="erase">Erase</button>
+      <span class="grow"></span>
+      <button id="straight" title="Highlights snap to a straight line along the row">Straight</button>
+    </div>
+    <div class="row">
+      <span class="row" id="colors"></span>
+      <span class="grow"></span>
+      <button id="undo">Undo</button>
+      <button id="clear">Clear</button>
+    </div>
+    <div class="row">
+      <label class="sl">Opacity <input id="opacity" type="range" min="15" max="100" value="45"><b id="opLabel">45%</b></label>
+      <label class="sl">Size <input id="size" type="range" min="1" max="12" value="6"><b id="szLabel">6</b></label>
+    </div>
+  </footer>
+  <button id="fab" aria-label="Show controls" aria-expanded="false" title="Show controls">
+    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span class="dot" id="fabDot"></span>
+  </button>
+</div>
+
+<div id="panel" role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="box">
+    <div class="row"><h2 class="grow">Menu</h2><button id="pClose">Close</button></div>
+
+    <h3>Backup</h3>
+    <p>Your notes are saved on this device. Keep a backup file somewhere safe, such as Files, Google Drive or an email to yourself. <span id="lastBk"></span></p>
+    <div class="row">
+      <button id="bkSave" class="primary">Save backup file</button>
+      <button id="bkOpen">Load backup file</button>
+    </div>
+    <p>Or copy and paste the notes as text, for example from the Claude version:</p>
+    <textarea id="bk" spellcheck="false" placeholder="Paste a backup here"></textarea>
+    <div class="row">
+      <button id="bkCopy">Copy text</button>
+      <button id="bkLoad">Load pasted text</button>
+    </div>
+    <p id="bkMsg" role="status"></p>
+
+    <hr>
+    <h3>Offline</h3>
+    <p id="offText">Pages are saved as you read them. Save all 625 pages (about 95 MB) to read anywhere without a connection.</p>
+    <div id="offBar" hidden><i></i></div>
+    <div class="row"><button id="offBtn">Save all pages for offline</button></div>
+
+    <div id="installBox" hidden>
+      <hr>
+      <h3>Install</h3>
+      <div class="row"><button id="installBtn" class="primary">Install app</button></div>
+    </div>
+  </div>
+</div>
+<input id="bkFile" type="file" accept=".json,application/json,text/plain" hidden>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (s) { return document.querySelector(s); };
+
+  /* ---------- book data ---------- */
+  var OFFSET = 3, FIRST = 1, LAST = 625, MUSHAF_PAGES = 604;
+  var PAGE_CACHE = "mn-pages-v1";
+  var SURAHS = [
+    ["Al-Fatihah",1],["Al-Baqarah",2],["Al Imran",50],["An-Nisa",77],["Al-Ma’idah",106],["Al-An’am",128],["Al-A’raf",151],["Al-Anfal",177],["At-Tawbah",187],["Yunus",208],
+    ["Hud",221],["Yusuf",235],["Ar-Ra’d",249],["Ibrahim",255],["Al-Hijr",262],["An-Nahl",267],["Al-Isra",282],["Al-Kahf",293],["Maryam",305],["Ta-Ha",312],
+    ["Al-Anbiya",322],["Al-Hajj",332],["Al-Mu’minun",342],["An-Nur",350],["Al-Furqan",359],["Ash-Shu’ara",367],["An-Naml",377],["Al-Qasas",385],["Al-Ankabut",396],["Ar-Rum",404],
+    ["Luqman",411],["As-Sajdah",415],["Al-Ahzab",418],["Saba",428],["Fatir",434],["Ya-Sin",440],["As-Saffat",446],["Sad",453],["Az-Zumar",458],["Ghafir",467],
+    ["Fussilat",477],["Ash-Shura",483],["Az-Zukhruf",489],["Ad-Dukhan",496],["Al-Jathiyah",499],["Al-Ahqaf",502],["Muhammad",507],["Al-Fath",511],["Al-Hujurat",515],["Qaf",518],
+    ["Adh-Dhariyat",520],["At-Tur",523],["An-Najm",526],["Al-Qamar",528],["Ar-Rahman",531],["Al-Waqi’ah",534],["Al-Hadid",537],["Al-Mujadilah",542],["Al-Hashr",545],["Al-Mumtahanah",549],
+    ["As-Saff",551],["Al-Jumu’ah",553],["Al-Munafiqun",554],["At-Taghabun",556],["At-Talaq",558],["At-Tahrim",560],["Al-Mulk",562],["Al-Qalam",564],["Al-Haqqah",566],["Al-Ma’arij",568],
+    ["Nuh",570],["Al-Jinn",572],["Al-Muzzammil",574],["Al-Muddaththir",575],["Al-Qiyamah",577],["Al-Insan",578],["Al-Mursalat",580],["An-Naba",582],["An-Nazi’at",583],["Abasa",585],
+    ["At-Takwir",586],["Al-Infitar",587],["Al-Mutaffifin",587],["Al-Inshiqaq",589],["Al-Buruj",590],["At-Tariq",591],["Al-A’la",591],["Al-Ghashiyah",592],["Al-Fajr",593],["Al-Balad",594],
+    ["Ash-Shams",595],["Al-Layl",595],["Ad-Duha",596],["Ash-Sharh",596],["At-Tin",597],["Al-Alaq",597],["Al-Qadr",598],["Al-Bayyinah",598],["Az-Zalzalah",599],["Al-Adiyat",599],
+    ["Al-Qari’ah",600],["At-Takathur",600],["Al-Asr",601],["Al-Humazah",601],["Al-Fil",601],["Quraysh",602],["Al-Ma’un",602],["Al-Kawthar",602],["Al-Kafirun",603],["An-Nasr",603],
+    ["Al-Masad",603],["Al-Ikhlas",604],["Al-Falaq",604],["An-Nas",604]
+  ];
+  var JUZ = [1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
+  /* ---------- elements & state ---------- */
+  var stage = $("#stage"), sheet = $("#sheet"), img = $("#pg"), ink = $("#ink"), panel = $("#panel");
+  var idx = 0, zoom = 1, cssW = 0, cssH = 0;
+  var tool = "highlight", color = "#f5c400", opacity = 45, straight = true;
+  var sizes = { pen: 3, hl: 6 };
+  var COLORS = ["#f5c400", "#2fb36a", "#ee5a9b", "#3a86e8", "#f08a24", "#1a1a1a"];
+  var ann = {};            // idx -> { s: [strokes], t: ms }
+  var hist = [];
+  var cur = null, snap = null, changed = false, drawing = false;
+  var showId = 0;
+
+  /* ---------- storage on this device ---------- */
+  var LS_NOTES = "mushaf-notes:v2", LS_PAGE = "mushaf-notes:v2:page", LS_BK = "mushaf-notes:v2:lastBackup", LS_PREFS = "mushaf-notes:v2:prefs";
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+  (function () { var r = lsGet(LS_NOTES); if (r) { try { ann = JSON.parse(r) || {}; } catch (e) { ann = {}; } } })();
+  (function () {
+    var r = lsGet(LS_PREFS); if (!r) return;
+    try { var p = JSON.parse(r); if (p.color) color = p.color; if (p.opacity) opacity = p.opacity; if (p.sizes) sizes = p.sizes; if (typeof p.straight === "boolean") straight = p.straight; } catch (e) {}
+  })();
+  function savePrefs() { lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight })); }
+  var saveTimer = null, askedPersist = false;
+  function saveLocal() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      if (!lsSet(LS_NOTES, JSON.stringify(ann))) showMsg("Notes could not be saved on this device. Save a backup file from the menu now.", false);
+    }, 200);
+    if (!askedPersist) { askedPersist = true; askPersist(); }
+  }
+  function askPersist() { try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {} }
+  function strokes(i) { return (ann[i] && ann[i].s) || []; }
+  function setStrokes(i, s) { ann[i] = { s: s, t: Date.now() }; saveLocal(); }
+
+  /* ---------- page loading ---------- */
+  function pageUrl(i) { return "pages/" + String(i).padStart(3, "0") + ".jpg"; }
+  var msg = $("#msg"), msgText = $("#msgText"), retryBtn = $("#retry");
+  function showMsg(t, retry) { msg.style.display = "flex"; msgText.textContent = t; retryBtn.hidden = !retry; }
+  function hideMsg() { msg.style.display = "none"; }
+
+  function loadImage(src) {
+    return new Promise(function (res, rej) {
+      var p = new Image();
+      p.onload = function () { res(p); };
+      p.onerror = function () { rej(new Error("load")); };
+      p.src = src;
+    });
+  }
+
+  async function show(i) {
+    i = Math.max(FIRST, Math.min(LAST, i | 0));
+    var my = ++showId;
+    var src = pageUrl(i);
+    if (img.getAttribute("src") !== src) {
+      var slow = setTimeout(function () { if (my === showId) showMsg("Loading page…", false); }, 350);
+      try { await loadImage(src); }
+      catch (e) {
+        clearTimeout(slow);
+        if (my === showId) {
+          showMsg(navigator.onLine === false ? "This page is not saved for offline yet. Connect to the internet, or save all pages from the menu next time you are online." : "This page could not be loaded. Check your connection, then try again.", true);
+          retryBtn.onclick = function () { show(i); };
+        }
+        return;
+      }
+      clearTimeout(slow);
+      if (my !== showId) return;
+      img.src = src;
+      try { await img.decode(); } catch (e) {}
+      if (my !== showId) return;
+    }
+    if (idx !== i) stage.scrollTo(0, 0);
+    idx = i;
+    lsSet(LS_PAGE, String(i));
+    hideMsg();
+    sheet.hidden = false;
+    layout();
+    updateNav();
+    [i + 1, i + 2, i - 1].forEach(function (n) { if (n >= FIRST && n <= LAST) { var p = new Image(); p.src = pageUrl(n); } });
+  }
+
+  function layout() {
+    var nw = img.naturalWidth || 750, nh = img.naturalHeight || 1072;
+    var availW = Math.max(120, stage.clientWidth - 8);
+    var availH = Math.max(160, stage.clientHeight - 8);
+    var fit = Math.min(availW / nw, availH / nh);
+    cssW = Math.round(nw * fit * zoom);
+    cssH = Math.round(nh * fit * zoom);
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    sheet.style.width = cssW + "px"; sheet.style.height = cssH + "px";
+    var vm = Math.max(4, Math.floor((stage.clientHeight - cssH) / 2));
+    sheet.style.margin = vm + "px auto";
+    img.style.width = cssW + "px"; img.style.height = cssH + "px";
+    ink.width = Math.round(cssW * dpr); ink.height = Math.round(cssH * dpr);
+    ink.style.width = cssW + "px"; ink.style.height = cssH + "px";
+    renderInk();
+  }
+
+  /* ---------- navigation ---------- */
+  var surahSel = $("#surahSel"), juzSel = $("#juzSel"), pageNo = $("#pageNo");
+  (function buildSelects() {
+    var o = document.createElement("option"); o.value = ""; o.textContent = "Surah"; o.hidden = true; surahSel.appendChild(o);
+    SURAHS.forEach(function (s, k) { var op = document.createElement("option"); op.value = k; op.textContent = (k + 1) + ". " + s[0]; surahSel.appendChild(op); });
+    var o2 = document.createElement("option"); o2.value = ""; o2.textContent = "Juz"; o2.hidden = true; juzSel.appendChild(o2);
+    JUZ.forEach(function (p, k) { var op = document.createElement("option"); op.value = k; op.textContent = "Juz " + (k + 1); juzSel.appendChild(op); });
+  })();
+  function updateNav() {
+    var m = idx - OFFSET, inBook = m >= 1 && m <= MUSHAF_PAGES;
+    pageNo.value = inBook ? m : "";
+    pageNo.placeholder = inBook ? "" : "–";
+    $("#ofLabel").textContent = inBook ? "of 604" : (m < 1 ? "front pages" : "back pages");
+    if (inBook) {
+      var c = 0;
+      for (var k = 0; k < SURAHS.length; k++) if (SURAHS[k][1] <= m) c = k;
+      for (var j = 0; j < SURAHS.length; j++) if (SURAHS[j][1] === m) { c = j; break; }
+      surahSel.value = String(c);
+      var jz = 0;
+      for (var q = 0; q < JUZ.length; q++) if (JUZ[q] <= m) jz = q;
+      juzSel.value = String(jz);
+    } else { surahSel.value = ""; juzSel.value = ""; }
+    $("#next").disabled = idx >= LAST;
+    $("#prev").disabled = idx <= FIRST;
+  }
+  surahSel.addEventListener("change", function () { if (surahSel.value !== "") show(SURAHS[+surahSel.value][1] + OFFSET); });
+  juzSel.addEventListener("change", function () { if (juzSel.value !== "") show(JUZ[+juzSel.value] + OFFSET); });
+  pageNo.addEventListener("change", function () { var m = parseInt(pageNo.value, 10); if (m >= 1 && m <= MUSHAF_PAGES) show(m + OFFSET); else updateNav(); });
+  $("#next").addEventListener("click", function () { show(idx + 1); });
+  $("#prev").addEventListener("click", function () { show(idx - 1); });
+  $("#zin").addEventListener("click", function () { zoom = Math.min(4, zoom * 1.25); layout(); });
+  $("#zout").addEventListener("click", function () { zoom = Math.max(0.6, zoom / 1.25); layout(); });
+  document.addEventListener("keydown", function (e) {
+    var t = e.target && e.target.tagName;
+    if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT") return;
+    if (e.key === "ArrowLeft" || e.key === "PageDown") { e.preventDefault(); show(idx + 1); }
+    else if (e.key === "ArrowRight" || e.key === "PageUp") { e.preventDefault(); show(idx - 1); }
+    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); }
+    else if (e.key === "Escape") { if (panel.classList.contains("open")) panel.classList.remove("open"); else setBars(!document.body.classList.contains("bars")); }
+  });
+  var sw = null;
+  stage.addEventListener("touchstart", function (e) {
+    if (tool !== "move" || e.touches.length !== 1) { sw = null; return; }
+    sw = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
+  }, { passive: true });
+  stage.addEventListener("touchend", function (e) {
+    if (!sw || tool !== "move") return;
+    var t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+    var wide = stage.scrollWidth > stage.clientWidth + 2;
+    if (!wide && Math.abs(dx) > 60 && Math.abs(dy) < 50 && Date.now() - sw.t < 700) show(dx > 0 ? idx + 1 : idx - 1);
+    sw = null;
+  }, { passive: true });
+  var rt = null;
+  window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (idx) layout(); }, 150); });
+
+  /* ---------- drawing ---------- */
+  function drawStroke(ctx, s) {
+    var p = s.p;
+    if (!p || p.length < 2) return;
+    ctx.save();
+    ctx.globalAlpha = s.a; ctx.strokeStyle = s.c; ctx.fillStyle = s.c;
+    var lw = s.w * cssW;
+    ctx.lineWidth = lw; ctx.lineJoin = "round";
+    ctx.lineCap = s.k === "hl" ? "butt" : "round";
+    if (p.length === 2) {
+      ctx.beginPath(); ctx.arc(p[0] * cssW, p[1] * cssH, lw / 2, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(p[0] * cssW, p[1] * cssH);
+      for (var i = 2; i < p.length - 2; i += 2) {
+        var mx = (p[i] + p[i + 2]) / 2 * cssW, my = (p[i + 1] + p[i + 3]) / 2 * cssH;
+        ctx.quadraticCurveTo(p[i] * cssW, p[i + 1] * cssH, mx, my);
+      }
+      ctx.lineTo(p[p.length - 2] * cssW, p[p.length - 1] * cssH);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function renderInk() {
+    if (!cssW) return;
+    var ctx = ink.getContext("2d");
+    var dpr = ink.width / cssW;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, ink.width, ink.height);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    strokes(idx).forEach(function (s) { drawStroke(ctx, s); });
+    if (cur) drawStroke(ctx, cur);
+  }
+  function pt(e) {
+    var r = ink.getBoundingClientRect();
+    return [Math.round((e.clientX - r.left) / r.width * 10000) / 10000,
+            Math.round((e.clientY - r.top) / r.height * 10000) / 10000];
+  }
+  function segDist(px, py, ax, ay, bx, by) {
+    var dx = bx - ax, dy = by - ay, len = dx * dx + dy * dy;
+    var t = len ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len)) : 0;
+    return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+  }
+  function hit(s, x, y, r) {
+    var p = s.p;
+    if (p.length === 2) return Math.hypot(p[0] * cssW - x, p[1] * cssH - y) <= r;
+    for (var i = 0; i < p.length - 2; i += 2) {
+      if (segDist(x, y, p[i] * cssW, p[i + 1] * cssH, p[i + 2] * cssW, p[i + 3] * cssH) <= r) return true;
+    }
+    return false;
+  }
+  var working = null; // strokes array being edited during a gesture
+  function eraseAt(q) {
+    var x = q[0] * cssW, y = q[1] * cssH;
+    var before = working.length;
+    working = working.filter(function (s) { return !hit(s, x, y, 12 + s.w * cssW / 2); });
+    if (working.length !== before) { changed = true; ann[idx] = { s: working, t: Date.now() }; renderInk(); }
+  }
+
+  ink.addEventListener("pointerdown", function (e) {
+    if (tool === "move" || !idx) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    e.preventDefault();
+    try { ink.setPointerCapture(e.pointerId); } catch (err) {}
+    drawing = true; changed = false;
+    snap = { i: idx, before: strokes(idx).slice() };
+    working = strokes(idx).slice();
+    var q = pt(e);
+    if (tool === "erase") { eraseAt(q); return; }
+    var hl = tool === "highlight";
+    cur = { k: hl ? "hl" : "pen", c: color, a: opacity / 100, w: hl ? sizes.hl * 0.01 : sizes.pen * 0.002, p: [q[0], q[1]] };
+    renderInk();
+  });
+  ink.addEventListener("pointermove", function (e) {
+    if (!drawing) return;
+    e.preventDefault();
+    var evs = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
+    if (!evs.length) evs = [e];
+    for (var k = 0; k < evs.length; k++) {
+      var q = pt(evs[k]);
+      if (tool === "erase") { eraseAt(q); continue; }
+      if (!cur) continue;
+      if (cur.k === "hl" && (straight || e.shiftKey)) {
+        cur.p = [cur.p[0], cur.p[1], q[0], cur.p[1]];
+      } else {
+        var lx = cur.p[cur.p.length - 2], ly = cur.p[cur.p.length - 1];
+        if (Math.hypot((q[0] - lx) * cssW, (q[1] - ly) * cssH) > 1.2) cur.p.push(q[0], q[1]);
+      }
+    }
+    renderInk();
+  });
+  function endStroke() {
+    if (!drawing) return;
+    drawing = false;
+    if (cur) {
+      var ok = cur.k === "hl" ? (cur.p.length >= 4 && Math.abs(cur.p[cur.p.length - 2] - cur.p[0]) > 0.004) : true;
+      if (ok) { working.push(cur); changed = true; }
+      cur = null;
+    }
+    if (changed && snap) {
+      hist.push(snap); if (hist.length > 100) hist.shift();
+      setStrokes(snap.i, working);
+    }
+    snap = null; working = null;
+    renderInk();
+  }
+  ink.addEventListener("pointerup", endStroke);
+  ink.addEventListener("pointercancel", endStroke);
+  ink.addEventListener("contextmenu", function (e) { if (tool !== "move") e.preventDefault(); });
+
+  /* ---------- toolbar ---------- */
+  function setTool(t) {
+    tool = t;
+    document.querySelectorAll("[data-tool]").forEach(function (b) { b.classList.toggle("on", b.dataset.tool === t); });
+    ink.style.touchAction = t === "move" ? "auto" : "none";
+    ink.style.cursor = t === "move" ? "default" : (t === "erase" ? "cell" : "crosshair");
+    var sz = $("#size");
+    sz.disabled = (t === "move" || t === "erase");
+    if (t === "pen") { sz.value = sizes.pen; $("#szLabel").textContent = sizes.pen; }
+    if (t === "highlight") { sz.value = sizes.hl; $("#szLabel").textContent = sizes.hl; }
+    showDot();
+  }
+  document.querySelectorAll("[data-tool]").forEach(function (b) { b.addEventListener("click", function () { setTool(b.dataset.tool); }); });
+  var colorsEl = $("#colors");
+  COLORS.forEach(function (c, i) {
+    var b = document.createElement("button");
+    b.className = "swatch" + (c === color ? " on" : "");
+    b.style.background = c;
+    b.setAttribute("aria-label", ["Yellow", "Green", "Pink", "Blue", "Orange", "Black"][i]);
+    b.addEventListener("click", function () {
+      color = c; savePrefs();
+      colorsEl.querySelectorAll(".swatch").forEach(function (s) { s.classList.remove("on"); });
+      b.classList.add("on");
+      if (tool === "move" || tool === "erase") setTool("highlight"); else showDot();
+    });
+    colorsEl.appendChild(b);
+  });
+  $("#opacity").value = opacity; $("#opLabel").textContent = opacity + "%";
+  $("#opacity").addEventListener("input", function (e) { opacity = +e.target.value; $("#opLabel").textContent = opacity + "%"; });
+  $("#opacity").addEventListener("change", savePrefs);
+  $("#size").addEventListener("input", function (e) {
+    var v = +e.target.value;
+    if (tool === "pen") sizes.pen = v; else if (tool === "highlight") sizes.hl = v;
+    $("#szLabel").textContent = v;
+  });
+  $("#size").addEventListener("change", savePrefs);
+  function syncStraight() { $("#straight").classList.toggle("on", straight); }
+  $("#straight").addEventListener("click", function () { straight = !straight; syncStraight(); savePrefs(); });
+
+  function undo() {
+    var h = hist.pop();
+    if (!h) return;
+    setStrokes(h.i, h.before);
+    if (h.i !== idx) show(h.i); else renderInk();
+  }
+  $("#undo").addEventListener("click", undo);
+  var clearTimer = null;
+  $("#clear").addEventListener("click", function () {
+    var b = $("#clear");
+    if (!strokes(idx).length) return;
+    if (!clearTimer) { b.textContent = "Sure?"; clearTimer = setTimeout(function () { b.textContent = "Clear"; clearTimer = null; }, 3000); return; }
+    clearTimeout(clearTimer); clearTimer = null; b.textContent = "Clear";
+    hist.push({ i: idx, before: strokes(idx).slice() });
+    setStrokes(idx, []);
+    renderInk();
+  });
+
+  /* ---------- full-screen controls ---------- */
+  var body = document.body, fab = $("#fab"), peek = false, peekT = null;
+  function setBars(on) { body.classList.toggle("bars", on); fab.setAttribute("aria-expanded", on ? "true" : "false"); if (!on) peek = false; }
+  function showDot() { var d = $("#fabDot"); d.style.display = (tool === "pen" || tool === "highlight") ? "block" : "none"; d.style.background = color; }
+  fab.addEventListener("click", function () { peek = false; setBars(true); });
+  $("#hideBtn").addEventListener("click", function () { setBars(false); });
+  var tap = null;
+  stage.addEventListener("pointerdown", function (e) { tap = (tool === "move" && e.isPrimary) ? { x: e.clientX, y: e.clientY, t: Date.now() } : null; });
+  stage.addEventListener("pointerup", function (e) {
+    if (!tap || tool !== "move") return;
+    if (Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 8 && Date.now() - tap.t < 350) { peek = false; setBars(!body.classList.contains("bars")); }
+    tap = null;
+  });
+  if (window.matchMedia && matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    document.addEventListener("mousemove", function (e) {
+      var nearEdge = e.clientY < 56 || e.clientY > window.innerHeight - 56;
+      var overBars = e.target && e.target.closest && e.target.closest("header, footer, #panel");
+      if (!body.classList.contains("bars") && nearEdge && !drawing) { setBars(true); peek = true; }
+      if (peek) {
+        clearTimeout(peekT);
+        if (!nearEdge && !overBars) peekT = setTimeout(function () { if (peek && !drawing && !panel.classList.contains("open")) setBars(false); }, 900);
+      }
+    });
+  }
+
+  /* ---------- menu: backup ---------- */
+  function backupText() {
+    var out = {};
+    Object.keys(ann).forEach(function (k) { if (ann[k].s && ann[k].s.length) out[k] = ann[k].s; });
+    return JSON.stringify({ v: 2, notes: out });
+  }
+  function importText(text) {
+    var o = JSON.parse(text);
+    if (!o || typeof o.notes !== "object") throw new Error("bad");
+    var n = 0;
+    Object.keys(o.notes).forEach(function (k) {
+      var i = parseInt(k, 10);
+      if (i >= FIRST && i <= LAST && Array.isArray(o.notes[k])) { setStrokes(i, o.notes[k]); n++; }
+    });
+    hist = [];
+    renderInk();
+    return n;
+  }
+  function bkMsg(t) { $("#bkMsg").textContent = t; }
+  function showLastBackup() {
+    var t = parseInt(lsGet(LS_BK), 10);
+    $("#lastBk").textContent = t ? "Last backup file: " + new Date(t).toLocaleDateString() + "." : "No backup file saved yet.";
+  }
+  function markBackedUp() { lsSet(LS_BK, String(Date.now())); showLastBackup(); }
+  $("#menuBtn").addEventListener("click", function () {
+    $("#bk").value = "";
+    bkMsg("");
+    showLastBackup();
+    refreshOffline();
+    panel.classList.add("open");
+  });
+  $("#pClose").addEventListener("click", function () { panel.classList.remove("open"); });
+  panel.addEventListener("click", function (e) { if (e.target === panel) panel.classList.remove("open"); });
+
+  $("#bkSave").addEventListener("click", async function () {
+    var name = "mushaf-notes-" + new Date().toISOString().slice(0, 10) + ".json";
+    var file = new File([backupText()], name, { type: "application/json" });
+    var touch = window.matchMedia && matchMedia("(pointer: coarse)").matches;
+    if (touch && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: "Mushaf notes backup" }); markBackedUp(); bkMsg("Backup shared."); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(file); a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    markBackedUp();
+    bkMsg("Backup file saved: " + name);
+  });
+  var bkFile = $("#bkFile");
+  $("#bkOpen").addEventListener("click", function () { bkFile.click(); });
+  bkFile.addEventListener("change", async function () {
+    var f = bkFile.files && bkFile.files[0];
+    bkFile.value = "";
+    if (!f) return;
+    try { var n = importText(await f.text()); bkMsg("Loaded notes for " + n + " page" + (n === 1 ? "" : "s") + "."); }
+    catch (e) { bkMsg("That file is not a Mushaf Notes backup."); }
+  });
+  $("#bkCopy").addEventListener("click", async function () {
+    var t = $("#bk"); t.value = backupText();
+    try { await navigator.clipboard.writeText(t.value); bkMsg("Copied."); }
+    catch (e) { t.focus(); t.select(); bkMsg("Text selected. Copy it with your device’s copy command."); }
+  });
+  $("#bkLoad").addEventListener("click", function () {
+    try { var n = importText($("#bk").value); bkMsg("Loaded notes for " + n + " page" + (n === 1 ? "" : "s") + "."); }
+    catch (e) { bkMsg("That text is not a valid notes backup."); }
+  });
+
+  /* ---------- menu: offline ---------- */
+  var offRunning = false;
+  async function countCached() {
+    if (!("caches" in window)) return -1;
+    try { var c = await caches.open(PAGE_CACHE); var keys = await c.keys(); return keys.filter(function (r) { return /\/pages\/\d{3}\.jpg$/.test(r.url); }).length; }
+    catch (e) { return -1; }
+  }
+  async function refreshOffline() {
+    if (offRunning) return;
+    var n = await countCached();
+    if (n < 0) { $("#offText").textContent = "Offline saving is not available in this browser."; $("#offBtn").disabled = true; return; }
+    if (n >= LAST) { $("#offText").textContent = "All 625 pages are saved on this device. The app works without a connection."; $("#offBtn").hidden = true; }
+    else { $("#offText").textContent = n + " of 625 pages saved on this device. Save the rest (about 95 MB in total) to read anywhere without a connection."; }
+  }
+  $("#offBtn").addEventListener("click", async function () {
+    if (offRunning) return;
+    offRunning = true;
+    askPersist();
+    var btn = $("#offBtn"), barBox = $("#offBar"), bar = $("#offBar i");
+    btn.disabled = true; barBox.hidden = false;
+    var cache = await caches.open(PAGE_CACHE);
+    var next = FIRST, done = 0, failed = 0;
+    async function worker() {
+      while (next <= LAST) {
+        var i = next++;
+        var url = new URL(pageUrl(i), location.href).href;
+        try {
+          if (!(await cache.match(url))) {
+            var r = await fetch(url);
+            if (r.ok) await cache.put(url, r); else failed++;
+          }
+        } catch (e) { failed++; }
+        done++;
+        bar.style.width = (done / LAST * 100) + "%";
+        $("#offText").textContent = "Saving pages… " + done + " of 625";
+      }
+    }
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    offRunning = false;
+    btn.disabled = false;
+    barBox.hidden = true;
+    if (failed) $("#offText").textContent = failed + " pages could not be saved. Check your connection and tap the button again to finish.";
+    else refreshOffline();
+  });
+
+  /* ---------- install (Android / desktop Chrome) ---------- */
+  var deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferredPrompt = e; $("#installBox").hidden = false; });
+  $("#installBtn").addEventListener("click", async function () {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try { await deferredPrompt.userChoice; } catch (e) {}
+    deferredPrompt = null; $("#installBox").hidden = true;
+  });
+  window.addEventListener("appinstalled", function () { $("#installBox").hidden = true; });
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  }
+
+  /* ---------- start ---------- */
+  setTool("highlight");
+  syncStraight();
+  var last = parseInt(lsGet(LS_PAGE), 10);
+  show(last >= FIRST && last <= LAST ? last : 1 + OFFSET);
+})();
+</script>
+</body>
+</html>

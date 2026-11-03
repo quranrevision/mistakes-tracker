@@ -40,49 +40,15 @@ html { background: var(--stage); }
 body { background: var(--stage); color: var(--ink); font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
 #app { position: relative; height: 100%; overflow: hidden; }
 button, input, select { font: inherit; color: inherit; }
-button, select { background: var(--btn); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; min-height: 36px; cursor: pointer; }
-select { padding: 6px 6px; max-width: 100%; }
+button, select { background: var(--btn); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; min-height: 38px; cursor: pointer; }
+select { padding: 6px; max-width: 100%; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button.on, button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-button:disabled { opacity: 0.45; cursor: default; }
-header, footer {
-  position: fixed; left: 0; right: 0; z-index: 10;
-  background: var(--panel);
-  background: color-mix(in srgb, var(--panel) 93%, transparent);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  transition: transform .22s ease, opacity .22s ease;
-}
-header { top: 0; border-bottom: 1px solid var(--line); padding: calc(7px + env(safe-area-inset-top, 0px)) calc(10px + env(safe-area-inset-right, 0px)) 7px calc(10px + env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 6px; }
-footer { bottom: 0; border-top: 1px solid var(--line); padding: 7px calc(10px + env(safe-area-inset-right, 0px)) calc(7px + env(safe-area-inset-bottom, 0px)) calc(10px + env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 7px; }
-body:not(.bars) header { transform: translateY(-100%); opacity: 0; pointer-events: none; }
-body:not(.bars) footer { transform: translateY(100%); opacity: 0; pointer-events: none; }
-#fab {
-  position: fixed; z-index: 11;
-  right: calc(12px + env(safe-area-inset-right, 0px));
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  width: 46px; height: 46px; min-height: 46px; padding: 0; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--panel); color: var(--ink); opacity: .72; box-shadow: 0 2px 10px var(--shadow);
-}
-#fab:hover, #fab:focus-visible { opacity: 1; }
-body.bars #fab { opacity: 0; pointer-events: none; }
-#fab .dot { position: absolute; top: 7px; right: 7px; width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--panel); }
-.row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.grow { flex: 1; }
-.nav { font-size: 20px; line-height: 1; min-width: 42px; }
-#pageNo { width: 3.6em; text-align: center; padding: 6px 4px; min-height: 36px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); }
-.muted { color: var(--muted); font-size: 13px; }
-header .row:nth-child(2) { flex-wrap: nowrap; }
-#surahSel { flex: 1 1 0; min-width: 84px; }
-#juzSel, #hideBtn { flex: none; }
-footer button { font-size: 14px; padding: 6px 9px; }
-#colors { gap: 5px; }
-.swatch { width: 28px; height: 28px; min-height: 28px; padding: 0; border-radius: 50%; border: 2px solid var(--line); }
-.swatch.on { border-color: var(--ink); box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--ink); }
-.sl { display: flex; align-items: center; gap: 8px; flex: 1 1 140px; min-width: 130px; font-size: 13px; color: var(--muted); }
-.sl input[type=range] { flex: 1; accent-color: var(--accent); min-width: 60px; }
-.sl b { color: var(--ink); font-weight: 600; min-width: 2.8em; text-align: right; }
-#stage { position: absolute; inset: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
+button:disabled { opacity: 0.4; cursor: default; }
+svg { display: block; }
+
+/* reading area */
+#stage { position: absolute; left: 0; right: 0; top: 0; bottom: 60px; overflow: auto; -webkit-overflow-scrolling: touch; }
 #sheet { position: relative; margin: 4px auto; background: #fff; box-shadow: 0 2px 14px var(--shadow); }
 #pg { position: absolute; left: 0; top: 0; display: block; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; pointer-events: none; }
 #ink { position: absolute; left: 0; top: 0; display: block; mix-blend-mode: multiply; }
@@ -90,39 +56,74 @@ footer button { font-size: 14px; padding: 6px 9px; }
 #msg .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; max-width: 320px; pointer-events: auto; }
 #msg p { margin: 0; }
 #msg button { margin-top: 12px; }
-#panel { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 20; }
-#panel.open { display: flex; }
-#panel .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; width: min(520px, 100%); max-height: 100%; overflow: auto; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; }
-#panel h2 { margin: 0; font-size: 17px; }
-#panel h3 { margin: 6px 0 0; font-size: 15px; }
-#panel p { margin: 0; color: var(--muted); font-size: 13.5px; }
-#panel textarea { width: 100%; box-sizing: border-box; height: 90px; background: var(--btn); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: 12px/1.3 ui-monospace, Menlo, Consolas, monospace; color: var(--ink); }
+
+/* page-turn buttons on each side */
+#sides { position: absolute; left: 0; right: 0; top: 0; bottom: 60px; pointer-events: none; z-index: 5; }
+.turn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 40px; height: min(46%, 300px); min-height: 120px; padding: 0;
+  display: flex; align-items: center; justify-content: center; pointer-events: auto;
+  background: color-mix(in srgb, var(--panel) 62%, transparent);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  color: var(--ink); opacity: .8; touch-action: manipulation;
+}
+.turn:hover { opacity: 1; }
+#turnL { left: calc(2px + env(safe-area-inset-left, 0px)); border-radius: 0 12px 12px 0; }
+#turnR { right: calc(2px + env(safe-area-inset-right, 0px)); border-radius: 12px 0 0 12px; }
+.turn:disabled { opacity: .25; }
+
+/* bottom bar */
+footer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  background: var(--panel); border-top: 1px solid var(--line);
+  padding: 8px calc(8px + env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) calc(8px + env(safe-area-inset-left, 0px));
+  display: flex; align-items: center; gap: 6px;
+}
+.ib { width: 44px; height: 44px; min-height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; flex: none; border-radius: 10px; }
+#swatches { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; justify-content: safe center; padding: 5px 7px; scrollbar-width: none; }
+#swatches::-webkit-scrollbar { display: none; }
+.swatch { width: 32px; height: 32px; min-height: 32px; padding: 0; border-radius: 50%; border: 2px solid var(--line); flex: none; }
+.swatch.on { border-color: var(--ink); box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--ink); }
+
+/* full-screen menu */
+#menu { position: fixed; inset: 0; z-index: 30; background: var(--panel); display: none; overflow: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+#menu.open { display: block; }
+#menu .top { position: sticky; top: 0; z-index: 1; background: var(--panel); border-bottom: 1px solid var(--line); padding: calc(10px + env(safe-area-inset-top, 0px)) calc(14px + env(safe-area-inset-right, 0px)) 10px calc(14px + env(safe-area-inset-left, 0px)); display: flex; align-items: center; gap: 10px; }
+#menu .top h2 { margin: 0; font-size: 18px; flex: 1; }
+#menu .top .where { color: var(--muted); font-size: 13px; display: block; font-weight: 400; margin-top: 2px; }
+#menu .body { max-width: 560px; margin: 0 auto; padding: 6px calc(14px + env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px)); }
+#menu section { padding: 14px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+#menu section:last-child { border-bottom: 0; }
+#menu h3 { margin: 0; font-size: 15px; }
+#menu p { margin: 0; color: var(--muted); font-size: 13.5px; }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.grow { flex: 1; }
+.seg { display: flex; gap: 0; }
+.seg button { border-radius: 0; flex: 1; }
+.seg button:first-child { border-radius: 8px 0 0 8px; }
+.seg button:last-child { border-radius: 0 8px 8px 0; }
+.seg button + button { border-left-width: 0; }
+#pageNo { width: 4.2em; text-align: center; padding: 7px 4px; min-height: 38px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); }
+#surahSel { flex: 1 1 180px; min-width: 0; }
+.sl { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.sl span { min-width: 7.5em; color: var(--muted); }
+.sl input[type=range] { flex: 1; accent-color: var(--accent); }
+.sl b { min-width: 2.8em; text-align: right; font-weight: 600; }
+.check { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; }
+#palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 10px; }
+.pal { width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; border: 2px solid var(--line); position: relative; justify-self: center; }
+.pal[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--ink); }
+.pal[aria-pressed="true"]::after { content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 18px; text-shadow: 0 0 3px rgba(0,0,0,.7); }
+#menu textarea { width: 100%; box-sizing: border-box; height: 80px; background: var(--btn); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: 12px/1.3 ui-monospace, Menlo, Consolas, monospace; color: var(--ink); }
 #offBar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
 #offBar i { display: block; height: 100%; width: 0; background: var(--accent); }
-hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
-@media (prefers-reduced-motion: reduce) { header, footer { transition: none; } }
+.note { font-size: 13.5px; color: var(--ink); min-height: 1.2em; }
 </style>
 </head>
 <body>
 <div id="app">
-  <header>
-    <div class="row">
-      <button id="next" class="nav" aria-label="Next page" title="Next page">‹</button>
-      <input id="pageNo" type="number" inputmode="numeric" min="1" max="604" aria-label="Mushaf page">
-      <span class="muted" id="ofLabel">of 604</span>
-      <button id="prev" class="nav" aria-label="Previous page" title="Previous page">›</button>
-      <span class="grow"></span>
-      <button id="zout" aria-label="Zoom out">−</button>
-      <button id="zin" aria-label="Zoom in">+</button>
-      <button id="menuBtn">Menu</button>
-    </div>
-    <div class="row">
-      <select id="surahSel" aria-label="Go to surah"></select>
-      <select id="juzSel" aria-label="Go to juz"></select>
-      <button id="hideBtn">Done</button>
-    </div>
-  </header>
-
   <main id="stage">
     <div id="sheet" hidden>
       <img id="pg" alt="" draggable="false">
@@ -131,61 +132,110 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
     <div id="msg"><div class="card"><p id="msgText"></p><button id="retry" hidden>Try again</button></div></div>
   </main>
 
+  <div id="sides">
+    <button id="turnL" class="turn" aria-label="Next page"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button id="turnR" class="turn" aria-label="Previous page"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+
   <footer>
-    <div class="row">
-      <button data-tool="move">Move</button>
-      <button data-tool="pen">Pen</button>
-      <button data-tool="highlight">Highlight</button>
-      <button data-tool="erase">Erase</button>
-      <span class="grow"></span>
-      <button id="straight" title="Highlights snap to a straight line along the row">Straight</button>
-    </div>
-    <div class="row">
-      <span class="row" id="colors"></span>
-      <span class="grow"></span>
-      <button id="undo">Undo</button>
-      <button id="clear">Clear</button>
-    </div>
-    <div class="row">
-      <label class="sl">Opacity <input id="opacity" type="range" min="15" max="100" value="45"><b id="opLabel">45%</b></label>
-      <label class="sl">Size <input id="size" type="range" min="1" max="12" value="6"><b id="szLabel">6</b></label>
-    </div>
+    <button id="mainTool" class="ib" aria-label="Highlight" title="Highlight"></button>
+    <button id="eraseBtn" class="ib" aria-label="Erase" title="Erase"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4.5l5 5-9 9H6l-2.5-2.5a1.5 1.5 0 010-2.1L14.5 4.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 10l5 5M10.5 18.5H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div id="swatches" role="group" aria-label="Colours"></div>
+    <button id="undoBtn" class="ib" aria-label="Undo" title="Undo"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <button id="menuBtn" class="ib" aria-label="Menu" title="Menu"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
   </footer>
-  <button id="fab" aria-label="Show controls" aria-expanded="false" title="Show controls">
-    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    <span class="dot" id="fabDot"></span>
-  </button>
 </div>
 
-<div id="panel" role="dialog" aria-modal="true" aria-label="Menu">
-  <div class="box">
-    <div class="row"><h2 class="grow">Menu</h2><button id="pClose">Close</button></div>
+<div id="menu" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+  <div class="top">
+    <h2 id="menuTitle">Menu<span class="where" id="where"></span></h2>
+    <button id="menuClose" class="primary">Close</button>
+  </div>
+  <div class="body">
+    <section>
+      <h3>Go to</h3>
+      <div class="row">
+        <label for="pageNo" class="muted" style="color:var(--muted)">Page</label>
+        <input id="pageNo" type="number" inputmode="numeric" min="1" max="604">
+        <button id="goBtn">Go</button>
+        <span class="grow"></span>
+      </div>
+      <div class="row">
+        <select id="surahSel" aria-label="Go to surah"></select>
+        <select id="juzSel" aria-label="Go to juz"></select>
+      </div>
+    </section>
 
-    <h3>Backup</h3>
-    <p>Your notes are saved on this device. Keep a backup file somewhere safe, such as Files, Google Drive or an email to yourself. <span id="lastBk"></span></p>
-    <div class="row">
-      <button id="bkSave" class="primary">Save backup file</button>
-      <button id="bkOpen">Load backup file</button>
-    </div>
-    <p>Or copy and paste the notes as text, for example from the Claude version:</p>
-    <textarea id="bk" spellcheck="false" placeholder="Paste a backup here"></textarea>
-    <div class="row">
-      <button id="bkCopy">Copy text</button>
-      <button id="bkLoad">Load pasted text</button>
-    </div>
-    <p id="bkMsg" role="status"></p>
+    <section>
+      <h3>Drawing tool</h3>
+      <p>The first button on the bottom bar uses this tool.</p>
+      <div class="seg" role="group" aria-label="Drawing tool">
+        <button data-main="highlight">Highlighter</button>
+        <button data-main="pen">Pen</button>
+        <button data-main="move">Move</button>
+      </div>
+      <p id="moveHint" hidden>Move lets you scroll a zoomed page and swipe to turn pages.</p>
+    </section>
 
-    <hr>
-    <h3>Offline</h3>
-    <p id="offText">Pages are saved as you read them. Save all 625 pages (about 95 MB) to read anywhere without a connection.</p>
-    <div id="offBar" hidden><i></i></div>
-    <div class="row"><button id="offBtn">Save all pages for offline</button></div>
+    <section>
+      <h3>Ink</h3>
+      <label class="sl"><span>Opacity</span><input id="opacity" type="range" min="15" max="100" value="45"><b id="opLabel">45%</b></label>
+      <label class="sl"><span>Highlighter size</span><input id="hlSize" type="range" min="1" max="12" value="6"><b id="hlLabel">6</b></label>
+      <label class="sl"><span>Pen size</span><input id="penSize" type="range" min="1" max="12" value="3"><b id="penLabel">3</b></label>
+      <label class="check"><input type="checkbox" id="straight" checked> Straight highlights along the line</label>
+    </section>
 
-    <div id="installBox" hidden>
-      <hr>
-      <h3>Install</h3>
-      <div class="row"><button id="installBtn" class="primary">Install app</button></div>
-    </div>
+    <section>
+      <h3>Colours on the bar</h3>
+      <p>Tap to add or remove a colour from the bottom bar.</p>
+      <div id="palette"></div>
+    </section>
+
+    <section>
+      <h3>View</h3>
+      <div class="row">
+        <span style="min-width:4.5em">Zoom</span>
+        <button id="zout" aria-label="Zoom out">−</button>
+        <b id="zoomLabel" style="min-width:3.5em;text-align:center">100%</b>
+        <button id="zin" aria-label="Zoom in">+</button>
+        <button id="zfit">Fit page</button>
+      </div>
+      <label class="check"><input type="checkbox" id="swapTurn"> Swap the page-turn buttons (left goes back)</label>
+    </section>
+
+    <section>
+      <h3>This page</h3>
+      <div class="row"><button id="clearBtn">Clear all notes on this page</button></div>
+    </section>
+
+    <section>
+      <h3>Backup</h3>
+      <p>Notes are saved on this device. Keep a backup file somewhere safe, such as Files, Google Drive or an email to yourself. <span id="lastBk"></span></p>
+      <div class="row">
+        <button id="bkSave" class="primary">Save backup file</button>
+        <button id="bkOpen">Load backup file</button>
+      </div>
+      <p>Or copy and paste notes as text:</p>
+      <textarea id="bk" spellcheck="false" placeholder="Paste a backup here"></textarea>
+      <div class="row">
+        <button id="bkCopy">Copy text</button>
+        <button id="bkLoad">Load pasted text</button>
+      </div>
+      <p class="note" id="bkMsg" role="status"></p>
+    </section>
+
+    <section>
+      <h3>Offline</h3>
+      <p id="offText">Pages are saved as you read them.</p>
+      <div id="offBar" hidden><i></i></div>
+      <div class="row"><button id="offBtn">Save all pages for offline</button></div>
+    </section>
+
+    <section id="installSec">
+      <h3>Install as an app</h3>
+      <p id="installText"></p>
+      <div class="row"><button id="installBtn" class="primary" hidden>Install app</button></div>
+    </section>
   </div>
 </div>
 <input id="bkFile" type="file" accept=".json,application/json,text/plain" hidden>
@@ -213,14 +263,20 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
     ["Al-Masad",603],["Al-Ikhlas",604],["Al-Falaq",604],["An-Nas",604]
   ];
   var JUZ = [1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
+  var PALETTE = [
+    ["#f5c400", "Yellow"], ["#2fb36a", "Green"], ["#ee5a9b", "Pink"], ["#3a86e8", "Blue"],
+    ["#f08a24", "Orange"], ["#e23b3b", "Red"], ["#8e5bd8", "Purple"], ["#19a7a0", "Teal"],
+    ["#7cc6ff", "Light blue"], ["#a8d64f", "Lime"], ["#8a5a2b", "Brown"], ["#1a1a1a", "Black"]
+  ];
+
   /* ---------- elements & state ---------- */
-  var stage = $("#stage"), sheet = $("#sheet"), img = $("#pg"), ink = $("#ink"), panel = $("#panel");
+  var stage = $("#stage"), sheet = $("#sheet"), img = $("#pg"), ink = $("#ink"), menu = $("#menu");
   var idx = 0, zoom = 1, cssW = 0, cssH = 0;
-  var tool = "highlight", color = "#f5c400", opacity = 45, straight = true;
+  var tool = "highlight", mainTool = "highlight";
+  var color = "#f5c400", opacity = 45, straight = true, swapTurn = false;
   var sizes = { pen: 3, hl: 6 };
-  var COLORS = ["#f5c400", "#2fb36a", "#ee5a9b", "#3a86e8", "#f08a24", "#1a1a1a"];
-  var ann = {};            // idx -> { s: [strokes], t: ms }
-  var hist = [];
+  var barColors = ["#f5c400", "#2fb36a", "#ee5a9b", "#3a86e8"];
+  var ann = {}, hist = [];
   var cur = null, snap = null, changed = false, drawing = false;
   var showId = 0;
 
@@ -231,14 +287,26 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
   (function () { var r = lsGet(LS_NOTES); if (r) { try { ann = JSON.parse(r) || {}; } catch (e) { ann = {}; } } })();
   (function () {
     var r = lsGet(LS_PREFS); if (!r) return;
-    try { var p = JSON.parse(r); if (p.color) color = p.color; if (p.opacity) opacity = p.opacity; if (p.sizes) sizes = p.sizes; if (typeof p.straight === "boolean") straight = p.straight; } catch (e) {}
+    try {
+      var p = JSON.parse(r);
+      if (p.color) color = p.color;
+      if (p.opacity) opacity = p.opacity;
+      if (p.sizes) sizes = p.sizes;
+      if (typeof p.straight === "boolean") straight = p.straight;
+      if (typeof p.swapTurn === "boolean") swapTurn = p.swapTurn;
+      if (p.mainTool) mainTool = p.mainTool;
+      if (Array.isArray(p.barColors) && p.barColors.length) barColors = p.barColors;
+    } catch (e) {}
   })();
-  function savePrefs() { lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight })); }
+  tool = mainTool;
+  function savePrefs() {
+    lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, mainTool: mainTool, barColors: barColors }));
+  }
   var saveTimer = null, askedPersist = false;
   function saveLocal() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
-      if (!lsSet(LS_NOTES, JSON.stringify(ann))) showMsg("Notes could not be saved on this device. Save a backup file from the menu now.", false);
+      if (!lsSet(LS_NOTES, JSON.stringify(ann))) showMsg("Notes could not be saved on this device. Open the menu and save a backup file now.", false);
     }, 200);
     if (!askedPersist) { askedPersist = true; askPersist(); }
   }
@@ -253,7 +321,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
   var msg = $("#msg"), msgText = $("#msgText"), retryBtn = $("#retry");
   function showMsg(t, retry) { msg.style.display = "flex"; msgText.textContent = t; retryBtn.hidden = !retry; }
   function hideMsg() { msg.style.display = "none"; }
-
   function loadImage(src) {
     return new Promise(function (res, rej) {
       var p = new Image();
@@ -273,15 +340,14 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
       var ok = false;
       try { await loadImage(src); ok = true; } catch (e) {}
       if (!ok) { try { await loadImage(altUrl(i)); src = altUrl(i); ok = true; } catch (e) {} }
+      clearTimeout(slow);
       if (!ok) {
-        clearTimeout(slow);
         if (my === showId) {
           showMsg(navigator.onLine === false ? "This page is not saved for offline yet. Connect to the internet, or save all pages from the menu next time you are online." : "This page could not be loaded. Check your connection, then try again.", true);
           retryBtn.onclick = function () { show(i); };
         }
         return;
       }
-      clearTimeout(slow);
       if (my !== showId) return;
       img.src = src;
       try { await img.decode(); } catch (e) {}
@@ -293,11 +359,14 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
     hideMsg();
     sheet.hidden = false;
     layout();
-    updateNav();
+    updateTurns();
     [i + 1, i + 2, i - 1].forEach(function (n) { if (n >= FIRST && n <= LAST) { var p = new Image(); p.src = pageUrl(n); } });
   }
 
   function layout() {
+    var footH = document.querySelector("footer").offsetHeight;
+    stage.style.bottom = footH + "px";
+    $("#sides").style.bottom = footH + "px";
     var nw = img.naturalWidth || 750, nh = img.naturalHeight || 1072;
     var availW = Math.max(120, stage.clientWidth - 8);
     var availH = Math.max(160, stage.clientHeight - 8);
@@ -314,46 +383,29 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
     renderInk();
   }
 
-  /* ---------- navigation ---------- */
-  var surahSel = $("#surahSel"), juzSel = $("#juzSel"), pageNo = $("#pageNo");
-  (function buildSelects() {
-    var o = document.createElement("option"); o.value = ""; o.textContent = "Surah"; o.hidden = true; surahSel.appendChild(o);
-    SURAHS.forEach(function (s, k) { var op = document.createElement("option"); op.value = k; op.textContent = (k + 1) + ". " + s[0]; surahSel.appendChild(op); });
-    var o2 = document.createElement("option"); o2.value = ""; o2.textContent = "Juz"; o2.hidden = true; juzSel.appendChild(o2);
-    JUZ.forEach(function (p, k) { var op = document.createElement("option"); op.value = k; op.textContent = "Juz " + (k + 1); juzSel.appendChild(op); });
-  })();
-  function updateNav() {
-    var m = idx - OFFSET, inBook = m >= 1 && m <= MUSHAF_PAGES;
-    pageNo.value = inBook ? m : "";
-    pageNo.placeholder = inBook ? "" : "–";
-    $("#ofLabel").textContent = inBook ? "of 604" : (m < 1 ? "front pages" : "back pages");
-    if (inBook) {
-      var c = 0;
-      for (var k = 0; k < SURAHS.length; k++) if (SURAHS[k][1] <= m) c = k;
-      for (var j = 0; j < SURAHS.length; j++) if (SURAHS[j][1] === m) { c = j; break; }
-      surahSel.value = String(c);
-      var jz = 0;
-      for (var q = 0; q < JUZ.length; q++) if (JUZ[q] <= m) jz = q;
-      juzSel.value = String(jz);
-    } else { surahSel.value = ""; juzSel.value = ""; }
-    $("#next").disabled = idx >= LAST;
-    $("#prev").disabled = idx <= FIRST;
+  /* ---------- page turning ---------- */
+  function nextPage() { show(idx + 1); }
+  function prevPage() { show(idx - 1); }
+  function updateTurns() {
+    var l = $("#turnL"), r = $("#turnR");
+    l.setAttribute("aria-label", swapTurn ? "Previous page" : "Next page");
+    r.setAttribute("aria-label", swapTurn ? "Next page" : "Previous page");
+    l.disabled = swapTurn ? idx <= FIRST : idx >= LAST;
+    r.disabled = swapTurn ? idx >= LAST : idx <= FIRST;
   }
-  surahSel.addEventListener("change", function () { if (surahSel.value !== "") show(SURAHS[+surahSel.value][1] + OFFSET); });
-  juzSel.addEventListener("change", function () { if (juzSel.value !== "") show(JUZ[+juzSel.value] + OFFSET); });
-  pageNo.addEventListener("change", function () { var m = parseInt(pageNo.value, 10); if (m >= 1 && m <= MUSHAF_PAGES) show(m + OFFSET); else updateNav(); });
-  $("#next").addEventListener("click", function () { show(idx + 1); });
-  $("#prev").addEventListener("click", function () { show(idx - 1); });
-  $("#zin").addEventListener("click", function () { zoom = Math.min(4, zoom * 1.25); layout(); });
-  $("#zout").addEventListener("click", function () { zoom = Math.max(0.6, zoom / 1.25); layout(); });
+  $("#turnL").addEventListener("click", function () { if (swapTurn) prevPage(); else nextPage(); });
+  $("#turnR").addEventListener("click", function () { if (swapTurn) nextPage(); else prevPage(); });
   document.addEventListener("keydown", function (e) {
     var t = e.target && e.target.tagName;
     if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT") return;
-    if (e.key === "ArrowLeft" || e.key === "PageDown") { e.preventDefault(); show(idx + 1); }
-    else if (e.key === "ArrowRight" || e.key === "PageUp") { e.preventDefault(); show(idx - 1); }
+    if (menu.classList.contains("open")) { if (e.key === "Escape") closeMenu(); return; }
+    if (e.key === "ArrowLeft") { e.preventDefault(); $("#turnL").click(); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); $("#turnR").click(); }
+    else if (e.key === "PageDown") { e.preventDefault(); nextPage(); }
+    else if (e.key === "PageUp") { e.preventDefault(); prevPage(); }
     else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); }
-    else if (e.key === "Escape") { if (panel.classList.contains("open")) panel.classList.remove("open"); else setBars(!document.body.classList.contains("bars")); }
   });
+  // swipe to turn pages with the Move tool (only when the page is not zoomed wider than the screen)
   var sw = null;
   stage.addEventListener("touchstart", function (e) {
     if (tool !== "move" || e.touches.length !== 1) { sw = null; return; }
@@ -363,11 +415,11 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
     if (!sw || tool !== "move") return;
     var t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
     var wide = stage.scrollWidth > stage.clientWidth + 2;
-    if (!wide && Math.abs(dx) > 60 && Math.abs(dy) < 50 && Date.now() - sw.t < 700) show(dx > 0 ? idx + 1 : idx - 1);
+    if (!wide && Math.abs(dx) > 60 && Math.abs(dy) < 50 && Date.now() - sw.t < 700) { if (dx > 0) nextPage(); else prevPage(); }
     sw = null;
   }, { passive: true });
   var rt = null;
-  window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (idx) layout(); }, 150); });
+  window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { fitSwatches(); if (idx) layout(); }, 150); });
 
   /* ---------- drawing ---------- */
   function drawStroke(ctx, s) {
@@ -479,44 +531,54 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
   ink.addEventListener("pointercancel", endStroke);
   ink.addEventListener("contextmenu", function (e) { if (tool !== "move") e.preventDefault(); });
 
-  /* ---------- toolbar ---------- */
+  /* ---------- bottom bar ---------- */
+  var ICONS = {
+    highlight: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l5 5-8.5 8.5H7.5V13.5L15 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M7.5 17.5L5 20h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    pen: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 3.5l4 4L8 20H4v-4L16.5 3.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+    move: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+  var NAMES = { highlight: "Highlight", pen: "Pen", move: "Move" };
   function setTool(t) {
     tool = t;
-    document.querySelectorAll("[data-tool]").forEach(function (b) { b.classList.toggle("on", b.dataset.tool === t); });
+    var mb = $("#mainTool");
+    mb.innerHTML = ICONS[mainTool];
+    mb.setAttribute("aria-label", NAMES[mainTool]); mb.title = NAMES[mainTool];
+    mb.classList.toggle("on", t === mainTool);
+    $("#eraseBtn").classList.toggle("on", t === "erase");
     ink.style.touchAction = t === "move" ? "auto" : "none";
     ink.style.cursor = t === "move" ? "default" : (t === "erase" ? "cell" : "crosshair");
-    var sz = $("#size");
-    sz.disabled = (t === "move" || t === "erase");
-    if (t === "pen") { sz.value = sizes.pen; $("#szLabel").textContent = sizes.pen; }
-    if (t === "highlight") { sz.value = sizes.hl; $("#szLabel").textContent = sizes.hl; }
-    showDot();
   }
-  document.querySelectorAll("[data-tool]").forEach(function (b) { b.addEventListener("click", function () { setTool(b.dataset.tool); }); });
-  var colorsEl = $("#colors");
-  COLORS.forEach(function (c, i) {
-    var b = document.createElement("button");
-    b.className = "swatch" + (c === color ? " on" : "");
-    b.style.background = c;
-    b.setAttribute("aria-label", ["Yellow", "Green", "Pink", "Blue", "Orange", "Black"][i]);
-    b.addEventListener("click", function () {
-      color = c; savePrefs();
-      colorsEl.querySelectorAll(".swatch").forEach(function (s) { s.classList.remove("on"); });
-      b.classList.add("on");
-      if (tool === "move" || tool === "erase") setTool("highlight"); else showDot();
+  $("#mainTool").addEventListener("click", function () { setTool(mainTool); });
+  $("#eraseBtn").addEventListener("click", function () { setTool("erase"); });
+
+  function buildSwatches() {
+    var box = $("#swatches");
+    box.innerHTML = "";
+    if (barColors.indexOf(color) < 0) color = barColors[0];
+    barColors.forEach(function (c) {
+      var name = (PALETTE.filter(function (p) { return p[0] === c; })[0] || [c, "Colour"])[1];
+      var b = document.createElement("button");
+      b.className = "swatch" + (c === color ? " on" : "");
+      b.style.background = c;
+      b.setAttribute("aria-label", name);
+      b.setAttribute("aria-pressed", c === color ? "true" : "false");
+      b.addEventListener("click", function () {
+        color = c; savePrefs();
+        box.querySelectorAll(".swatch").forEach(function (s) { s.classList.remove("on"); s.setAttribute("aria-pressed", "false"); });
+        b.classList.add("on"); b.setAttribute("aria-pressed", "true");
+        if (tool === "erase" || tool === "move") setTool(mainTool === "move" ? "highlight" : mainTool);
+      });
+      box.appendChild(b);
     });
-    colorsEl.appendChild(b);
-  });
-  $("#opacity").value = opacity; $("#opLabel").textContent = opacity + "%";
-  $("#opacity").addEventListener("input", function (e) { opacity = +e.target.value; $("#opLabel").textContent = opacity + "%"; });
-  $("#opacity").addEventListener("change", savePrefs);
-  $("#size").addEventListener("input", function (e) {
-    var v = +e.target.value;
-    if (tool === "pen") sizes.pen = v; else if (tool === "highlight") sizes.hl = v;
-    $("#szLabel").textContent = v;
-  });
-  $("#size").addEventListener("change", savePrefs);
-  function syncStraight() { $("#straight").classList.toggle("on", straight); }
-  $("#straight").addEventListener("click", function () { straight = !straight; syncStraight(); savePrefs(); });
+    fitSwatches();
+  }
+  function fitSwatches() {
+    var box = $("#swatches"), n = barColors.length;
+    if (!n) return;
+    var avail = box.clientWidth - 16;
+    var size = Math.max(24, Math.min(32, Math.floor((avail - 6 * (n - 1)) / n)));
+    box.querySelectorAll(".swatch").forEach(function (b) { b.style.width = b.style.height = b.style.minHeight = size + "px"; });
+  }
 
   function undo() {
     var h = hist.pop();
@@ -524,42 +586,109 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
     setStrokes(h.i, h.before);
     if (h.i !== idx) show(h.i); else renderInk();
   }
-  $("#undo").addEventListener("click", undo);
+  $("#undoBtn").addEventListener("click", undo);
+
+  /* ---------- menu ---------- */
+  function openMenu() {
+    var m = idx - OFFSET, inBook = m >= 1 && m <= MUSHAF_PAGES;
+    var where = "";
+    if (inBook) {
+      var c = 0;
+      for (var k = 0; k < SURAHS.length; k++) if (SURAHS[k][1] <= m) c = k;
+      for (var j = 0; j < SURAHS.length; j++) if (SURAHS[j][1] === m) { c = j; break; }
+      var jz = 0;
+      for (var q = 0; q < JUZ.length; q++) if (JUZ[q] <= m) jz = q;
+      surahSel.value = String(c); juzSel.value = String(jz);
+      pageNo.value = m;
+      where = "Page " + m + " · " + SURAHS[c][0] + " · Juz " + (jz + 1);
+    } else {
+      surahSel.value = ""; juzSel.value = ""; pageNo.value = "";
+      where = m < 1 ? "Front pages" : "Back pages";
+    }
+    $("#where").textContent = where;
+    $("#bk").value = ""; $("#bkMsg").textContent = "";
+    showLastBackup(); refreshOffline(); syncMenu();
+    menu.classList.add("open");
+    menu.scrollTop = 0;
+  }
+  function closeMenu() { menu.classList.remove("open"); }
+  $("#menuBtn").addEventListener("click", openMenu);
+  $("#menuClose").addEventListener("click", closeMenu);
+
+  var surahSel = $("#surahSel"), juzSel = $("#juzSel"), pageNo = $("#pageNo");
+  (function buildSelects() {
+    var o = document.createElement("option"); o.value = ""; o.textContent = "Surah"; o.hidden = true; surahSel.appendChild(o);
+    SURAHS.forEach(function (s, k) { var op = document.createElement("option"); op.value = k; op.textContent = (k + 1) + ". " + s[0]; surahSel.appendChild(op); });
+    var o2 = document.createElement("option"); o2.value = ""; o2.textContent = "Juz"; o2.hidden = true; juzSel.appendChild(o2);
+    JUZ.forEach(function (p, k) { var op = document.createElement("option"); op.value = k; op.textContent = "Juz " + (k + 1); juzSel.appendChild(op); });
+  })();
+  surahSel.addEventListener("change", function () { if (surahSel.value !== "") { show(SURAHS[+surahSel.value][1] + OFFSET); closeMenu(); } });
+  juzSel.addEventListener("change", function () { if (juzSel.value !== "") { show(JUZ[+juzSel.value] + OFFSET); closeMenu(); } });
+  function goPage() { var m = parseInt(pageNo.value, 10); if (m >= 1 && m <= MUSHAF_PAGES) { show(m + OFFSET); closeMenu(); } }
+  $("#goBtn").addEventListener("click", goPage);
+  pageNo.addEventListener("keydown", function (e) { if (e.key === "Enter") goPage(); });
+
+  function syncMenu() {
+    document.querySelectorAll("[data-main]").forEach(function (b) { b.classList.toggle("on", b.dataset.main === mainTool); });
+    $("#moveHint").hidden = mainTool !== "move";
+    $("#opacity").value = opacity; $("#opLabel").textContent = opacity + "%";
+    $("#hlSize").value = sizes.hl; $("#hlLabel").textContent = sizes.hl;
+    $("#penSize").value = sizes.pen; $("#penLabel").textContent = sizes.pen;
+    $("#straight").checked = straight;
+    $("#swapTurn").checked = swapTurn;
+    $("#zoomLabel").textContent = Math.round(zoom * 100) + "%";
+    buildPalette();
+  }
+  document.querySelectorAll("[data-main]").forEach(function (b) {
+    b.addEventListener("click", function () { mainTool = b.dataset.main; savePrefs(); setTool(mainTool); syncMenu(); });
+  });
+  $("#opacity").addEventListener("input", function (e) { opacity = +e.target.value; $("#opLabel").textContent = opacity + "%"; });
+  $("#hlSize").addEventListener("input", function (e) { sizes.hl = +e.target.value; $("#hlLabel").textContent = sizes.hl; });
+  $("#penSize").addEventListener("input", function (e) { sizes.pen = +e.target.value; $("#penLabel").textContent = sizes.pen; });
+  ["#opacity", "#hlSize", "#penSize"].forEach(function (s) { $(s).addEventListener("change", savePrefs); });
+  $("#straight").addEventListener("change", function (e) { straight = e.target.checked; savePrefs(); });
+  $("#swapTurn").addEventListener("change", function (e) { swapTurn = e.target.checked; savePrefs(); updateTurns(); });
+
+  function buildPalette() {
+    var box = $("#palette");
+    box.innerHTML = "";
+    PALETTE.forEach(function (p) {
+      var on = barColors.indexOf(p[0]) >= 0;
+      var b = document.createElement("button");
+      b.className = "pal"; b.style.background = p[0];
+      b.setAttribute("aria-label", p[1]); b.title = p[1];
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.addEventListener("click", function () {
+        var i = barColors.indexOf(p[0]);
+        if (i >= 0) { if (barColors.length === 1) return; barColors.splice(i, 1); }
+        else {
+          // keep the bar in palette order
+          barColors.push(p[0]);
+          barColors.sort(function (a, c) { return PALETTE.findIndex(function (x) { return x[0] === a; }) - PALETTE.findIndex(function (x) { return x[0] === c; }); });
+        }
+        savePrefs(); buildSwatches(); buildPalette();
+      });
+      box.appendChild(b);
+    });
+  }
+
+  function setZoom(z) { zoom = Math.max(0.6, Math.min(4, z)); $("#zoomLabel").textContent = Math.round(zoom * 100) + "%"; layout(); }
+  $("#zin").addEventListener("click", function () { setZoom(zoom * 1.25); });
+  $("#zout").addEventListener("click", function () { setZoom(zoom / 1.25); });
+  $("#zfit").addEventListener("click", function () { setZoom(1); });
+
   var clearTimer = null;
-  $("#clear").addEventListener("click", function () {
-    var b = $("#clear");
-    if (!strokes(idx).length) return;
-    if (!clearTimer) { b.textContent = "Sure?"; clearTimer = setTimeout(function () { b.textContent = "Clear"; clearTimer = null; }, 3000); return; }
-    clearTimeout(clearTimer); clearTimer = null; b.textContent = "Clear";
+  $("#clearBtn").addEventListener("click", function () {
+    var b = $("#clearBtn");
+    if (!strokes(idx).length) { b.textContent = "This page has no notes"; setTimeout(function () { b.textContent = "Clear all notes on this page"; }, 1800); return; }
+    if (!clearTimer) { b.textContent = "Tap again to clear"; clearTimer = setTimeout(function () { b.textContent = "Clear all notes on this page"; clearTimer = null; }, 3000); return; }
+    clearTimeout(clearTimer); clearTimer = null;
     hist.push({ i: idx, before: strokes(idx).slice() });
     setStrokes(idx, []);
     renderInk();
+    b.textContent = "Cleared";
+    setTimeout(function () { b.textContent = "Clear all notes on this page"; }, 1800);
   });
-
-  /* ---------- full-screen controls ---------- */
-  var body = document.body, fab = $("#fab"), peek = false, peekT = null;
-  function setBars(on) { body.classList.toggle("bars", on); fab.setAttribute("aria-expanded", on ? "true" : "false"); if (!on) peek = false; }
-  function showDot() { var d = $("#fabDot"); d.style.display = (tool === "pen" || tool === "highlight") ? "block" : "none"; d.style.background = color; }
-  fab.addEventListener("click", function () { peek = false; setBars(true); });
-  $("#hideBtn").addEventListener("click", function () { setBars(false); });
-  var tap = null;
-  stage.addEventListener("pointerdown", function (e) { tap = (tool === "move" && e.isPrimary) ? { x: e.clientX, y: e.clientY, t: Date.now() } : null; });
-  stage.addEventListener("pointerup", function (e) {
-    if (!tap || tool !== "move") return;
-    if (Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 8 && Date.now() - tap.t < 350) { peek = false; setBars(!body.classList.contains("bars")); }
-    tap = null;
-  });
-  if (window.matchMedia && matchMedia("(hover: hover) and (pointer: fine)").matches) {
-    document.addEventListener("mousemove", function (e) {
-      var nearEdge = e.clientY < 56 || e.clientY > window.innerHeight - 56;
-      var overBars = e.target && e.target.closest && e.target.closest("header, footer, #panel");
-      if (!body.classList.contains("bars") && nearEdge && !drawing) { setBars(true); peek = true; }
-      if (peek) {
-        clearTimeout(peekT);
-        if (!nearEdge && !overBars) peekT = setTimeout(function () { if (peek && !drawing && !panel.classList.contains("open")) setBars(false); }, 900);
-      }
-    });
-  }
 
   /* ---------- menu: backup ---------- */
   function backupText() {
@@ -585,16 +714,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
     $("#lastBk").textContent = t ? "Last backup file: " + new Date(t).toLocaleDateString() + "." : "No backup file saved yet.";
   }
   function markBackedUp() { lsSet(LS_BK, String(Date.now())); showLastBackup(); }
-  $("#menuBtn").addEventListener("click", function () {
-    $("#bk").value = "";
-    bkMsg("");
-    showLastBackup();
-    refreshOffline();
-    panel.classList.add("open");
-  });
-  $("#pClose").addEventListener("click", function () { panel.classList.remove("open"); });
-  panel.addEventListener("click", function (e) { if (e.target === panel) panel.classList.remove("open"); });
-
   $("#bkSave").addEventListener("click", async function () {
     var name = "mushaf-notes-" + new Date().toISOString().slice(0, 10) + ".json";
     var file = new File([backupText()], name, { type: "application/json" });
@@ -641,7 +760,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
     var n = await countCached();
     if (n < 0) { $("#offText").textContent = "Offline saving is not available in this browser."; $("#offBtn").disabled = true; return; }
     if (n >= LAST) { $("#offText").textContent = "All 625 pages are saved on this device. The app works without a connection."; $("#offBtn").hidden = true; }
-    else { $("#offText").textContent = n + " of 625 pages saved on this device. Save the rest (about 95 MB in total) to read anywhere without a connection."; }
+    else { $("#offText").textContent = n + " of 625 pages saved on this device. Save the rest (about 95 MB in total) to read anywhere without a connection."; $("#offBtn").hidden = false; }
   }
   $("#offBtn").addEventListener("click", async function () {
     if (offRunning) return;
@@ -676,24 +795,35 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; width: 100%; }
     else refreshOffline();
   });
 
-  /* ---------- install (Android / desktop Chrome) ---------- */
+  /* ---------- install ---------- */
+  var standalone = (window.matchMedia && matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches) || navigator.standalone === true;
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  function setInstallText() {
+    var t;
+    if (standalone) { $("#installSec").hidden = true; return; }
+    if (isIOS) t = "In Safari, tap the Share button, then Add to Home Screen. The app then opens from its own icon, full screen.";
+    else t = "In Chrome, open the browser menu and choose Install app or Add to Home screen. The app then opens from its own icon, full screen.";
+    $("#installText").textContent = t;
+  }
+  setInstallText();
   var deferredPrompt = null;
-  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferredPrompt = e; $("#installBox").hidden = false; });
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferredPrompt = e; $("#installBtn").hidden = false; });
   $("#installBtn").addEventListener("click", async function () {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     try { await deferredPrompt.userChoice; } catch (e) {}
-    deferredPrompt = null; $("#installBox").hidden = true;
+    deferredPrompt = null; $("#installBtn").hidden = true;
   });
-  window.addEventListener("appinstalled", function () { $("#installBox").hidden = true; });
+  window.addEventListener("appinstalled", function () { $("#installSec").hidden = true; });
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
   }
 
   /* ---------- start ---------- */
-  setTool("highlight");
-  syncStraight();
+  buildSwatches();
+  setTool(mainTool);
+  updateTurns();
   var last = parseInt(lsGet(LS_PAGE), 10);
   show(last >= FIRST && last <= LAST ? last : 1 + OFFSET);
 })();

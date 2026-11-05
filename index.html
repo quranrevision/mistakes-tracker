@@ -80,6 +80,19 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
 #turnR { right: calc(2px + env(safe-area-inset-right, 0px)); border-radius: 12px 0 0 12px; }
 .turn:disabled { opacity: .25; }
 
+/* undo and redo, just under the top bar */
+#history {
+  position: absolute; z-index: 6; top: 60px; right: calc(10px + env(safe-area-inset-right, 0px));
+  display: flex; gap: 6px;
+}
+#history .ib {
+  width: 40px; height: 40px; min-height: 40px;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  box-shadow: 0 1px 6px var(--shadow);
+}
+#history .ib:disabled { opacity: .35; }
+
 /* bottom bar */
 footer {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
@@ -174,11 +187,15 @@ footer {
     <button id="turnR" class="turn" aria-label="Previous page"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
 
+  <div id="history" role="group" aria-label="Undo and redo">
+    <button id="undoBtn" class="ib" aria-label="Undo" title="Undo"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <button id="redoBtn" class="ib" aria-label="Redo" title="Redo"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14l5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+  </div>
+
   <footer>
     <button id="mainTool" class="ib" aria-label="Highlight" title="Highlight"></button>
     <button id="eraseBtn" class="ib" aria-label="Erase" title="Erase"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4.5l5 5-9 9H6l-2.5-2.5a1.5 1.5 0 010-2.1L14.5 4.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 10l5 5M10.5 18.5H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <div id="swatches" role="group" aria-label="Colours"></div>
-    <button id="undoBtn" class="ib" aria-label="Undo" title="Undo"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <button id="menuBtn" class="ib" aria-label="Menu" title="Menu"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
   </footer>
 </div>
@@ -281,9 +298,10 @@ footer {
       </div>
       <div class="cards">
         <div class="card2"><b id="stScore">0</b><span>score</span></div>
-        <div class="card2"><b id="stCount">0</b><span>highlights</span></div>
+        <div class="card2"><b id="stCount">0</b><span>mistakes</span></div>
         <div class="card2"><b id="stSurahs">0</b><span>surahs</span></div>
       </div>
+      <p id="stFixed" hidden></p>
       <p id="stUndated" hidden></p>
     </section>
 
@@ -298,6 +316,7 @@ footer {
       <label class="check"><input type="checkbox" id="showZero"> Show surahs with no mistakes</label>
       <div id="statList"></div>
       <p>Per page is the score divided by the surah’s length in pages, so long and short surahs can be compared fairly. Surahs shorter than a page are marked “short”, because a single mistake moves them a lot. Tap a surah to open it.</p>
+      <p>Erasing a highlight within 20 minutes removes it completely, as a quick correction. Erasing it later keeps it in these stats as a fixed mistake.</p>
     </section>
 
     <section>
@@ -347,14 +366,30 @@ footer {
   var tool = "highlight", mainTool = "highlight";
   var color = "#f5c400", opacity = 45, straight = true, swapTurn = false;
   var sizes = { pen: 3, hl: 6 };
-  var barColors = ["#f5c400", "#2fb36a", "#ee5a9b", "#3a86e8"];
+  var barColors = ["#f5c400", "#2fb36a", "#ee5a9b", "#3a86e8", "#e23b3b"];
   var weights = {}, statPeriod = 0, statSort = "rate", groupJ30 = false, showZero = false;
-  var ann = {}, hist = [];
+  var ann = {}, hist = [], redoStack = [];
   var cur = null, snap = null, changed = false, drawing = false;
   var showId = 0;
 
   /* ---------- storage on this device ---------- */
-  var LS_NOTES = "mushaf-notes:v2", LS_PAGE = "mushaf-notes:v2:page", LS_BK = "mushaf-notes:v2:lastBackup", LS_PREFS = "mushaf-notes:v2:prefs";
+  var LS_NOTES = "mushaf-notes:v2", LS_PAGE = "mushaf-notes:v2:page", LS_BK = "mushaf-notes:v2:lastBackup", LS_PREFS = "mushaf-notes:v2:prefs", LS_LOG = "mushaf-notes:v2:fixed";
+  // Highlights erased more than 20 minutes after they were made are kept here, so they still count as mistakes.
+  var FIX_AFTER = 20 * 60 * 1000;
+  var fixedLog = [];   // [{ i: page index, y: position, c: colour, d: made (0 if unknown), f: erased }]
+  (function () { var r = lsGet(LS_LOG); if (r) { try { fixedLog = JSON.parse(r) || []; } catch (e) { fixedLog = []; } } })();
+  function saveLog() { if (!lsSet(LS_LOG, JSON.stringify(fixedLog))) showMsg("Your mistake history could not be saved on this device. Open the menu and save a backup file now.", false); }
+  function logRemoved(i, removed) {
+    var now = Date.now(), added = 0;
+    removed.forEach(function (st) {
+      if (!st || st.k !== "hl") return;
+      if (st.d && now - st.d <= FIX_AFTER) return;   // a quick correction, not a mistake
+      var t = 0, n = 0; for (var q = 1; q < st.p.length; q += 2) { t += st.p[q]; n++; }
+      fixedLog.push({ i: i, y: n ? Math.round(t / n * 10000) / 10000 : 0, c: st.c, d: st.d || 0, f: now });
+      added++;
+    });
+    if (added) saveLog();
+  }
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
   (function () { var r = lsGet(LS_NOTES); if (r) { try { ann = JSON.parse(r) || {}; } catch (e) { ann = {}; } } })();
@@ -447,6 +482,7 @@ footer {
     var headH = document.querySelector("header").offsetHeight;
     stage.style.bottom = footH + "px"; stage.style.top = headH + "px";
     $("#sides").style.bottom = footH + "px"; $("#sides").style.top = headH + "px";
+    $("#history").style.top = (headH + 8) + "px";
     var nw = img.naturalWidth || 750, nh = img.naturalHeight || 1072;
     var availW = Math.max(120, stage.clientWidth - 8);
     var availH = Math.max(160, stage.clientHeight - 8);
@@ -484,6 +520,7 @@ footer {
     else if (e.key === "ArrowRight") { e.preventDefault(); $("#turnR").click(); }
     else if (e.key === "PageDown") { e.preventDefault(); nextPage(); }
     else if (e.key === "PageUp") { e.preventDefault(); prevPage(); }
+    else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) { e.preventDefault(); redo(); }
     else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); }
   });
   // swipe to turn pages with the Move tool (only when the page is not zoomed wider than the screen)
@@ -602,11 +639,16 @@ footer {
       cur = null;
     }
     if (changed && snap) {
+      snap.logLen = fixedLog.length;
+      var kept = working;
+      logRemoved(snap.i, snap.before.filter(function (st) { return kept.indexOf(st) < 0; }));
       hist.push(snap); if (hist.length > 100) hist.shift();
+      redoStack = [];
       setStrokes(snap.i, working);
     }
     snap = null; working = null;
     renderInk();
+    updateUndoRedo();
   }
   ink.addEventListener("pointerup", endStroke);
   ink.addEventListener("pointercancel", endStroke);
@@ -664,10 +706,28 @@ footer {
   function undo() {
     var h = hist.pop();
     if (!h) return;
+    var r = { i: h.i, before: h.before, after: strokes(h.i).slice(), logLen: h.logLen, logTail: [] };
+    if (typeof h.logLen === "number" && fixedLog.length > h.logLen) { r.logTail = fixedLog.slice(h.logLen); fixedLog.length = h.logLen; saveLog(); }
+    redoStack.push(r);
     setStrokes(h.i, h.before);
     if (h.i !== idx) show(h.i); else renderInk();
+    updateUndoRedo();
+  }
+  function redo() {
+    var r = redoStack.pop();
+    if (!r) return;
+    hist.push({ i: r.i, before: r.before, logLen: r.logLen });
+    if (r.logTail.length) { fixedLog = fixedLog.slice(0, r.logLen).concat(r.logTail); saveLog(); }
+    setStrokes(r.i, r.after);
+    if (r.i !== idx) show(r.i); else renderInk();
+    updateUndoRedo();
+  }
+  function updateUndoRedo() {
+    $("#undoBtn").disabled = !hist.length;
+    $("#redoBtn").disabled = !redoStack.length;
   }
   $("#undoBtn").addEventListener("click", undo);
+  $("#redoBtn").addEventListener("click", redo);
 
   /* ---------- menu ---------- */
   function position() {
@@ -773,7 +833,10 @@ footer {
     if (!strokes(idx).length) { b.textContent = "This page has no notes"; setTimeout(function () { b.textContent = "Clear all notes on this page"; }, 1800); return; }
     if (!clearTimer) { b.textContent = "Tap again to clear"; clearTimer = setTimeout(function () { b.textContent = "Clear all notes on this page"; clearTimer = null; }, 3000); return; }
     clearTimeout(clearTimer); clearTimer = null;
-    hist.push({ i: idx, before: strokes(idx).slice() });
+    hist.push({ i: idx, before: strokes(idx).slice(), logLen: fixedLog.length });
+    redoStack = [];
+    logRemoved(idx, strokes(idx).slice());
+    setTimeout(updateUndoRedo, 0);
     setStrokes(idx, []);
     renderInk();
     b.textContent = "Cleared";
@@ -805,7 +868,7 @@ footer {
 
   function computeStats() {
     var since = statPeriod ? Date.now() - statPeriod * 86400000 : 0;
-    var score = new Array(114).fill(0), count = new Array(114).fill(0), undated = 0, used = {};
+    var score = new Array(114).fill(0), count = new Array(114).fill(0), fixed = new Array(114).fill(0), undated = 0, used = {};
     Object.keys(ann).forEach(function (k) {
       var m = +k - OFFSET;
       if (m < 1 || m > MUSHAF_PAGES) return;
@@ -818,7 +881,16 @@ footer {
         score[s] += weightOf(st.c);
       });
     });
-    return { score: score, count: count, undated: undated, used: used };
+    fixedLog.forEach(function (x) {
+      var m = x.i - OFFSET;
+      if (m < 1 || m > MUSHAF_PAGES) return;
+      used[x.c] = (used[x.c] || 0) + 1;
+      if (since) { if (!x.d) { undated++; return; } if (x.d < since) return; }
+      var s = surahAt(m, x.y);
+      count[s]++; fixed[s]++;
+      score[s] += weightOf(x.c);
+    });
+    return { score: score, count: count, fixed: fixed, undated: undated, used: used };
   }
   function fmt(x) { return x >= 10 ? x.toFixed(1) : x.toFixed(2); }
 
@@ -831,22 +903,24 @@ footer {
     var rows = [];
     for (var s = 0; s < 114; s++) {
       if (groupJ30 && s >= 77) continue;
-      rows.push({ name: (s + 1) + ". " + SURAHS[s][0], score: r.score[s], count: r.count[s], len: SURAH_LEN[s], page: SURAHS[s][1], order: s });
+      rows.push({ name: (s + 1) + ". " + SURAHS[s][0], score: r.score[s], count: r.count[s], fixed: r.fixed[s], len: SURAH_LEN[s], page: SURAHS[s][1], order: s });
     }
     if (groupJ30) {
-      var g = { name: "Juz 30 (An-Naba to An-Nas)", score: 0, count: 0, len: 0, page: SURAHS[77][1], order: 77 };
-      for (var j = 77; j < 114; j++) { g.score += r.score[j]; g.count += r.count[j]; g.len += SURAH_LEN[j]; }
+      var g = { name: "Juz 30 (An-Naba to An-Nas)", score: 0, count: 0, fixed: 0, len: 0, page: SURAHS[77][1], order: 77 };
+      for (var j = 77; j < 114; j++) { g.score += r.score[j]; g.count += r.count[j]; g.fixed += r.fixed[j]; g.len += SURAH_LEN[j]; }
       rows.push(g);
     }
     rows.forEach(function (x) { x.rate = x.len ? x.score / x.len : 0; });
-    var totalScore = 0, totalCount = 0, withMistakes = 0;
-    for (var t = 0; t < 114; t++) { totalScore += r.score[t]; totalCount += r.count[t]; if (r.score[t] > 0) withMistakes++; }
+    var totalScore = 0, totalCount = 0, totalFixed = 0, withMistakes = 0;
+    for (var t = 0; t < 114; t++) { totalScore += r.score[t]; totalCount += r.count[t]; totalFixed += r.fixed[t]; if (r.score[t] > 0) withMistakes++; }
+    $("#stFixed").hidden = !totalFixed;
+    $("#stFixed").textContent = totalFixed ? "Includes " + totalFixed + " fixed mistake" + (totalFixed === 1 ? "" : "s") + ": highlights you erased later because you no longer make them." : "";
     $("#stScore").textContent = Math.round(totalScore * 10) / 10;
     $("#stCount").textContent = totalCount;
     $("#stSurahs").textContent = withMistakes;
     var und = $("#stUndated");
     und.hidden = !r.undated;
-    und.textContent = r.undated ? r.undated + " older highlight" + (r.undated === 1 ? " was" : "s were") + " made before dates were recorded, so " + (r.undated === 1 ? "it only counts" : "they only count") + " in All time." : "";
+    und.textContent = r.undated ? r.undated + " older mistake" + (r.undated === 1 ? " was" : "s were") + " made before dates were recorded, so " + (r.undated === 1 ? "it only counts" : "they only count") + " in All time." : "";
 
     if (!showZero) rows = rows.filter(function (x) { return x.score > 0; });
     if (statSort === "rate") rows.sort(function (a, b) { return b.rate - a.rate || b.score - a.score || a.order - b.order; });
@@ -872,7 +946,7 @@ footer {
       b.querySelector(".sc").textContent = Math.round(x.score * 10) / 10;
       b.querySelector(".pp").textContent = fmt(x.rate) + " per page";
       b.querySelector(".bar i").style.width = (x.rate / maxRate * 100) + "%";
-      b.querySelector(".meta").textContent = x.count + " highlight" + (x.count === 1 ? "" : "s") + " · " + (x.len < 1 ? x.len.toFixed(2) : x.len.toFixed(1)) + " pages";
+      b.querySelector(".meta").textContent = x.count + " mistake" + (x.count === 1 ? "" : "s") + (x.fixed ? " (" + x.fixed + " fixed)" : "") + " · " + (x.len < 1 ? x.len.toFixed(2) : x.len.toFixed(1)) + " pages";
       b.setAttribute("aria-label", x.name + ", score " + (Math.round(x.score * 10) / 10) + ", " + fmt(x.rate) + " per page");
       b.addEventListener("click", function () { closeStats(); closeMenu(); show(x.page + OFFSET); });
       list.appendChild(b);
@@ -889,7 +963,7 @@ footer {
       row.innerHTML = '<span class="sw"></span><span class="nm"><span class="cn"></span><br><span class="uses"></span></span><button aria-label="Less">−</button><output></output><button aria-label="More">+</button>';
       row.querySelector(".sw").style.background = c;
       row.querySelector(".cn").textContent = colourName(c);
-      row.querySelector(".uses").textContent = n + " highlight" + (n === 1 ? "" : "s") + " in total";
+      row.querySelector(".uses").textContent = n + " mistake" + (n === 1 ? "" : "s") + " in total";
       row.querySelector("output").textContent = weightOf(c);
       var btns = row.querySelectorAll("button");
       btns[0].setAttribute("aria-label", "Lower the value of " + colourName(c));
@@ -913,7 +987,7 @@ footer {
   function backupText() {
     var out = {};
     Object.keys(ann).forEach(function (k) { if (ann[k].s && ann[k].s.length) out[k] = ann[k].s; });
-    return JSON.stringify({ v: 2, notes: out });
+    return JSON.stringify({ v: 2, notes: out, fixed: fixedLog });
   }
   function importText(text) {
     var o = JSON.parse(text);
@@ -923,8 +997,18 @@ footer {
       var i = parseInt(k, 10);
       if (i >= FIRST && i <= LAST && Array.isArray(o.notes[k])) { setStrokes(i, o.notes[k]); n++; }
     });
-    hist = [];
-    renderInk();
+    if (Array.isArray(o.fixed)) {
+      var seen = {};
+      fixedLog.forEach(function (x) { seen[x.i + "|" + x.y + "|" + x.c + "|" + x.d + "|" + x.f] = 1; });
+      o.fixed.forEach(function (x) {
+        if (!x || typeof x.i !== "number") return;
+        var key = x.i + "|" + x.y + "|" + x.c + "|" + x.d + "|" + x.f;
+        if (!seen[key]) { seen[key] = 1; fixedLog.push({ i: x.i, y: +x.y || 0, c: x.c, d: +x.d || 0, f: +x.f || 0 }); }
+      });
+      saveLog();
+    }
+    hist = []; redoStack = [];
+    renderInk(); updateUndoRedo();
     return n;
   }
   function bkMsg(t) { $("#bkMsg").textContent = t; }
@@ -1042,6 +1126,7 @@ footer {
   /* ---------- start ---------- */
   buildSwatches();
   setTool(mainTool);
+  updateUndoRedo();
   updateTurns();
   var last = parseInt(lsGet(LS_PAGE), 10);
   show(last >= FIRST && last <= LAST ? last : 1 + OFFSET);

@@ -151,7 +151,7 @@ footer {
 .wrow .nm { flex: 1; font-size: 14px; }
 .wrow .uses { color: var(--muted); font-size: 12.5px; }
 .wrow button { width: 38px; padding: 0; }
-.wrow output { min-width: 1.6em; text-align: center; font-weight: 600; }
+.wrow input { width: 3.4em; text-align: center; font-weight: 600; padding: 7px 4px; min-height: 38px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); }
 #statList { display: flex; flex-direction: column; gap: 6px; }
 .srow { display: block; width: 100%; text-align: left; padding: 9px 11px; border-radius: 10px; }
 .srow .l1 { display: flex; align-items: baseline; gap: 8px; }
@@ -159,8 +159,9 @@ footer {
 .srow .sc { font-weight: 700; }
 .srow .pp { color: var(--muted); font-size: 13px; white-space: nowrap; }
 .srow .l2 { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-.srow .bar { flex: 1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
-.srow .bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.srow .bar { flex: 1; height: 8px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.srow .bar .fill { display: flex; height: 100%; border-radius: 3px; overflow: hidden; }
+.srow .bar .fill i { display: block; height: 100%; }
 .srow .meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
 .tag { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; margin-left: 4px; }
 .empty { color: var(--muted); text-align: center; padding: 24px 8px; }
@@ -321,7 +322,7 @@ footer {
 
     <section>
       <h3>Colour values</h3>
-      <p>How much each highlight colour counts towards the score. Set a colour to 0 to leave it out.</p>
+      <p>How much each highlight colour counts towards the score. Decimals work, for example 0.5 for a hesitation and 1 for a real mistake. Type a value or use − and +. Set a colour to 0 to leave it out.</p>
       <div id="weights" style="display:flex;flex-direction:column;gap:10px"></div>
     </section>
   </div>
@@ -864,11 +865,15 @@ footer {
   }
   function strokeY(st) { var t = 0, n = 0; for (var i = 1; i < st.p.length; i += 2) { t += st.p[i]; n++; } return n ? t / n : 0; }
   function weightOf(c) { return typeof weights[c] === "number" ? weights[c] : 1; }
+  // colour values can be decimals such as 0.5 or 0.7 (one decimal place, from 0 to 10)
+  function setWeight(c, v) { weights[c] = Math.min(10, Math.max(0, Math.round(v * 10) / 10)); savePrefs(); renderStats(); }
+  function fmtW(v) { return String(Math.round(v * 10) / 10); }
   function colourName(c) { var f = PALETTE.filter(function (p) { return p[0] === c; })[0]; return f ? f[1] : "Other colour"; }
 
   function computeStats() {
     var since = statPeriod ? Date.now() - statPeriod * 86400000 : 0;
     var score = new Array(114).fill(0), count = new Array(114).fill(0), fixed = new Array(114).fill(0), undated = 0, used = {};
+    var byCol = []; for (var z = 0; z < 114; z++) byCol.push({});
     Object.keys(ann).forEach(function (k) {
       var m = +k - OFFSET;
       if (m < 1 || m > MUSHAF_PAGES) return;
@@ -879,6 +884,7 @@ footer {
         var s = surahAt(m, strokeY(st));
         count[s]++;
         score[s] += weightOf(st.c);
+        byCol[s][st.c] = (byCol[s][st.c] || 0) + weightOf(st.c);
       });
     });
     fixedLog.forEach(function (x) {
@@ -889,8 +895,9 @@ footer {
       var s = surahAt(m, x.y);
       count[s]++; fixed[s]++;
       score[s] += weightOf(x.c);
+      byCol[s][x.c] = (byCol[s][x.c] || 0) + weightOf(x.c);
     });
-    return { score: score, count: count, fixed: fixed, undated: undated, used: used };
+    return { score: score, count: count, fixed: fixed, byCol: byCol, undated: undated, used: used };
   }
   function fmt(x) { return x >= 10 ? x.toFixed(1) : x.toFixed(2); }
 
@@ -903,11 +910,14 @@ footer {
     var rows = [];
     for (var s = 0; s < 114; s++) {
       if (groupJ30 && s >= 77) continue;
-      rows.push({ name: (s + 1) + ". " + SURAHS[s][0], score: r.score[s], count: r.count[s], fixed: r.fixed[s], len: SURAH_LEN[s], page: SURAHS[s][1], order: s });
+      rows.push({ name: (s + 1) + ". " + SURAHS[s][0], score: r.score[s], count: r.count[s], fixed: r.fixed[s], byCol: r.byCol[s], len: SURAH_LEN[s], page: SURAHS[s][1], order: s });
     }
     if (groupJ30) {
-      var g = { name: "Juz 30 (An-Naba to An-Nas)", score: 0, count: 0, fixed: 0, len: 0, page: SURAHS[77][1], order: 77 };
-      for (var j = 77; j < 114; j++) { g.score += r.score[j]; g.count += r.count[j]; g.fixed += r.fixed[j]; g.len += SURAH_LEN[j]; }
+      var g = { name: "Juz 30 (An-Naba to An-Nas)", score: 0, count: 0, fixed: 0, byCol: {}, len: 0, page: SURAHS[77][1], order: 77 };
+      for (var j = 77; j < 114; j++) {
+        g.score += r.score[j]; g.count += r.count[j]; g.fixed += r.fixed[j]; g.len += SURAH_LEN[j];
+        Object.keys(r.byCol[j]).forEach(function (c) { g.byCol[c] = (g.byCol[c] || 0) + r.byCol[j][c]; });
+      }
       rows.push(g);
     }
     rows.forEach(function (x) { x.rate = x.len ? x.score / x.len : 0; });
@@ -934,18 +944,34 @@ footer {
       e.textContent = totalCount ? "No mistakes count towards the score in this period. Check the colour values below." : (statPeriod ? "No highlights in this period yet." : "No highlights yet. Highlight a mistake on any page and it will show here.");
       list.appendChild(e);
     }
-    var maxRate = Math.max.apply(null, rows.map(function (x) { return x.rate; }).concat([0.0001]));
+    // scale bars against surahs of a page or more, so one short surah does not shrink every other bar
+    var regular = rows.filter(function (x) { return x.len >= 1 && x.score > 0; });
+    var maxRate = Math.max.apply(null, (regular.length ? regular : rows).map(function (x) { return x.rate; }).concat([0.0001]));
     rows.forEach(function (x) {
       var b = document.createElement("button");
       b.className = "srow";
       var short = x.len < 1 ? '<span class="tag">short</span>' : "";
       b.innerHTML = '<div class="l1"><span class="nm"></span><span class="sc"></span><span class="pp"></span></div>' +
-        '<div class="l2"><span class="bar"><i></i></span><span class="meta"></span></div>';
+        '<div class="l2"><span class="bar"><span class="fill"></span></span><span class="meta"></span></div>';
       b.querySelector(".nm").textContent = x.name;
       if (short) b.querySelector(".nm").insertAdjacentHTML("beforeend", short);
       b.querySelector(".sc").textContent = Math.round(x.score * 10) / 10;
       b.querySelector(".pp").textContent = fmt(x.rate) + " per page";
-      b.querySelector(".bar i").style.width = (x.rate / maxRate * 100) + "%";
+      // bar length compares surahs; its colours show how much each highlight colour adds to the score
+      var fill = b.querySelector(".bar .fill");
+      fill.style.width = (x.score > 0 ? Math.max(6, Math.min(100, x.rate / maxRate * 100)) : 0) + "%";
+      var cols = Object.keys(x.byCol).filter(function (c) { return x.byCol[c] > 0; });
+      cols.sort(function (a, c) {
+        var ia = PALETTE.findIndex(function (p) { return p[0] === a; }), ic = PALETTE.findIndex(function (p) { return p[0] === c; });
+        return (ia < 0 ? 99 : ia) - (ic < 0 ? 99 : ic);
+      });
+      cols.forEach(function (c) {
+        var seg = document.createElement("i");
+        seg.style.background = c;
+        seg.style.width = (x.score ? x.byCol[c] / x.score * 100 : 0) + "%";
+        seg.title = colourName(c) + ": " + (Math.round(x.byCol[c] * 10) / 10);
+        fill.appendChild(seg);
+      });
       b.querySelector(".meta").textContent = x.count + " mistake" + (x.count === 1 ? "" : "s") + (x.fixed ? " (" + x.fixed + " fixed)" : "") + " · " + (x.len < 1 ? x.len.toFixed(2) : x.len.toFixed(1)) + " pages";
       b.setAttribute("aria-label", x.name + ", score " + (Math.round(x.score * 10) / 10) + ", " + fmt(x.rate) + " per page");
       b.addEventListener("click", function () { closeStats(); closeMenu(); show(x.page + OFFSET); });
@@ -960,16 +986,24 @@ footer {
     colours.forEach(function (c) {
       var row = document.createElement("div"); row.className = "wrow";
       var n = r.used[c] || 0;
-      row.innerHTML = '<span class="sw"></span><span class="nm"><span class="cn"></span><br><span class="uses"></span></span><button aria-label="Less">−</button><output></output><button aria-label="More">+</button>';
+      row.innerHTML = '<span class="sw"></span><span class="nm"><span class="cn"></span><br><span class="uses"></span></span><button aria-label="Less">−</button><input type="text" inputmode="decimal" autocomplete="off"><button aria-label="More">+</button>';
       row.querySelector(".sw").style.background = c;
       row.querySelector(".cn").textContent = colourName(c);
       row.querySelector(".uses").textContent = n + " mistake" + (n === 1 ? "" : "s") + " in total";
-      row.querySelector("output").textContent = weightOf(c);
+      var box = row.querySelector("input");
+      box.value = fmtW(weightOf(c));
+      box.setAttribute("aria-label", "Value of " + colourName(c));
       var btns = row.querySelectorAll("button");
-      btns[0].setAttribute("aria-label", "Lower the value of " + colourName(c));
-      btns[1].setAttribute("aria-label", "Raise the value of " + colourName(c));
-      btns[0].addEventListener("click", function () { weights[c] = Math.max(0, weightOf(c) - 1); savePrefs(); renderStats(); });
-      btns[1].addEventListener("click", function () { weights[c] = Math.min(10, weightOf(c) + 1); savePrefs(); renderStats(); });
+      btns[0].setAttribute("aria-label", "Lower the value of " + colourName(c) + " by 0.5");
+      btns[1].setAttribute("aria-label", "Raise the value of " + colourName(c) + " by 0.5");
+      btns[0].addEventListener("click", function () { setWeight(c, weightOf(c) - 0.5); });
+      btns[1].addEventListener("click", function () { setWeight(c, weightOf(c) + 0.5); });
+      box.addEventListener("change", function () {
+        var v = parseFloat(String(box.value).replace(",", "."));
+        if (isNaN(v)) { box.value = fmtW(weightOf(c)); return; }
+        setWeight(c, v);
+      });
+      box.addEventListener("keydown", function (e) { if (e.key === "Enter") box.blur(); });
       wbox.appendChild(row);
     });
   }

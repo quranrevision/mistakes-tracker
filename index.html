@@ -58,7 +58,7 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
 #stage { position: absolute; left: 0; right: 0; top: 52px; bottom: 60px; overflow: auto; -webkit-overflow-scrolling: touch; }
 #sheet { position: relative; margin: 4px auto; background: #fff; box-shadow: 0 2px 14px var(--shadow); }
 #pg { position: absolute; left: 0; top: 0; display: block; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; pointer-events: none; }
-#ink { position: absolute; left: 0; top: 0; display: block; mix-blend-mode: multiply; }
+#ink { position: absolute; left: 0; top: 0; display: block; mix-blend-mode: multiply; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 #msg { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; text-align: center; pointer-events: none; }
 #msg .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; max-width: 320px; pointer-events: auto; }
 #msg p { margin: 0; }
@@ -92,6 +92,14 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
   box-shadow: 0 1px 6px var(--shadow);
 }
 #history .ib:disabled { opacity: .35; }
+#statsTop {
+  position: absolute; z-index: 6; top: 60px; left: calc(10px + env(safe-area-inset-left, 0px));
+  height: 40px; min-height: 40px; padding: 0 12px 0 10px; border-radius: 10px;
+  display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  box-shadow: 0 1px 6px var(--shadow);
+}
 
 /* bottom bar */
 footer {
@@ -147,6 +155,11 @@ footer {
 .card2 b { display: block; font-size: 20px; line-height: 1.2; }
 .card2 span { font-size: 12px; color: var(--muted); }
 .wrow { display: flex; align-items: center; gap: 10px; }
+.grip { width: 30px; height: 40px; display: flex; align-items: center; justify-content: center; flex: none; color: var(--muted); cursor: grab; touch-action: none; border-radius: 8px; }
+.grip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.grip.none { visibility: hidden; }
+.wrow.dragging { position: relative; z-index: 2; background: var(--btn); box-shadow: 0 4px 16px var(--shadow); border-radius: 10px; }
+.wrow.dragging .grip { cursor: grabbing; }
 .wrow .sw { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); flex: none; }
 .wrow .nm { flex: 1; font-size: 14px; }
 .wrow .uses { color: var(--muted); font-size: 12.5px; }
@@ -165,6 +178,13 @@ footer {
 .srow .meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
 .tag { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 7px; margin-left: 4px; }
 .empty { color: var(--muted); text-align: center; padding: 24px 8px; }
+.drow { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--btn); }
+.drow .dt { flex: 1; min-width: 0; }
+.drow .dt b { display: block; font-size: 14px; }
+.drow .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 3px; font-size: 12.5px; color: var(--muted); }
+.drow .chips span { display: inline-flex; align-items: center; gap: 4px; }
+.drow .chips i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+#recFrom, #recTo { flex: 1 1 120px; }
 </style>
 </head>
 <body>
@@ -188,6 +208,7 @@ footer {
     <button id="turnR" class="turn" aria-label="Previous page"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
 
+  <button id="statsTop" title="Mistake stats" aria-label="Mistake stats"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span>Stats</span></button>
   <div id="history" role="group" aria-label="Undo and redo">
     <button id="undoBtn" class="ib" aria-label="Undo" title="Undo"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <button id="redoBtn" class="ib" aria-label="Redo" title="Redo"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14l5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
@@ -208,20 +229,17 @@ footer {
   </div>
   <div class="body">
     <section>
-      <h3>Stats</h3>
-      <p>See which surahs have the most highlighted mistakes.</p>
-      <div class="row"><button id="statsBtn" class="primary">Open mistake stats</button></div>
-    </section>
-
-    <section>
       <h3>Drawing tool</h3>
       <p>The first button on the bottom bar uses this tool.</p>
       <div class="seg" role="group" aria-label="Drawing tool">
         <button data-main="highlight">Highlighter</button>
         <button data-main="pen">Pen</button>
         <button data-main="move">Move</button>
+        <button data-main="recolour">Recolour</button>
       </div>
+      <p>Tip: with the highlighter, press and hold a highlight to switch it to the colour selected on the bar. Its date is kept, so it still counts as the same mistake.</p>
       <p id="moveHint" hidden>Move lets you scroll a zoomed page and swipe to turn pages.</p>
+      <p id="recolourHint" hidden>Recolour: pick a colour on the bar, then tap or drag over highlights to change them to it. They keep their original date, so they are not counted as new or fixed mistakes. Switch back to Highlighter when you are done.</p>
     </section>
 
     <section>
@@ -234,7 +252,7 @@ footer {
 
     <section>
       <h3>Colours on the bar</h3>
-      <p>Tap to add or remove a colour from the bottom bar.</p>
+      <p>Tap to add or remove a colour from the bottom bar. To change their order, open Stats and drag them in Colour values and order.</p>
       <div id="palette"></div>
     </section>
 
@@ -288,7 +306,7 @@ footer {
 <div id="stats" class="sheet" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
   <div class="top">
     <h2 id="statsTitle">Mistake stats<span class="where">Highlights only. Pen marks are not counted.</span></h2>
-    <button id="statsBack" class="primary">Back</button>
+    <button id="statsBack" class="primary">Close</button>
   </div>
   <div class="body">
     <section>
@@ -321,9 +339,27 @@ footer {
     </section>
 
     <section>
-      <h3>Colour values</h3>
-      <p>How much each highlight colour counts towards the score. Decimals work, for example 0.5 for a hesitation and 1 for a real mistake. Type a value or use − and +. Set a colour to 0 to leave it out.</p>
+      <h3>Colour values and order</h3>
+      <p>Drag the handle on the left to change the order of colours on the bottom bar. The numbers set how much each highlight colour counts towards the score. Decimals work, for example 0.5 for a hesitation and 1 for a real mistake. Type a value or use − and +. Set a colour to 0 to leave it out.</p>
       <div id="weights" style="display:flex;flex-direction:column;gap:10px"></div>
+    </section>
+
+    <section>
+      <h3>Change a colour everywhere</h3>
+      <p>Switch every highlight of one colour to another, on all pages and in your fixed mistakes. Dates are kept, so nothing is counted as new or fixed.</p>
+      <div class="row">
+        <select id="recFrom" aria-label="Change from colour"></select>
+        <span>to</span>
+        <select id="recTo" aria-label="Change to colour"></select>
+      </div>
+      <div class="row"><button id="recGo">Change colour</button></div>
+      <p class="note" id="recMsg" role="status"></p>
+    </section>
+
+    <section>
+      <h3>Fixed mistake history</h3>
+      <p>Highlights you erased more than 20 minutes after making them, grouped by the day you erased them. If you erased highlights only to redo them in another colour, remove that day here.</p>
+      <div id="fixedDays" style="display:flex;flex-direction:column;gap:8px"></div>
     </section>
   </div>
 </div>
@@ -484,6 +520,7 @@ footer {
     stage.style.bottom = footH + "px"; stage.style.top = headH + "px";
     $("#sides").style.bottom = footH + "px"; $("#sides").style.top = headH + "px";
     $("#history").style.top = (headH + 8) + "px";
+    $("#statsTop").style.top = (headH + 8) + "px";
     var nw = img.naturalWidth || 750, nh = img.naturalHeight || 1072;
     var availW = Math.max(120, stage.clientWidth - 8);
     var availH = Math.max(160, stage.clientHeight - 8);
@@ -592,6 +629,18 @@ footer {
     return false;
   }
   var working = null; // strokes array being edited during a gesture
+  // recolour: change the colour of highlights the finger passes over, keeping their dates
+  function recolourAt(q) {
+    var x = q[0] * cssW, y = q[1] * cssH, any = false;
+    working = working.map(function (s) {
+      if (s.c === color || !hit(s, x, y, 12 + s.w * cssW / 2)) return s;
+      any = true;
+      var copy = {}; Object.keys(s).forEach(function (k) { copy[k] = s[k]; });
+      copy.c = color;
+      return copy;
+    });
+    if (any) { changed = true; ann[idx] = { s: working, t: Date.now() }; renderInk(); }
+  }
   function eraseAt(q) {
     var x = q[0] * cssW, y = q[1] * cssH;
     var before = working.length;
@@ -599,6 +648,26 @@ footer {
     if (working.length !== before) { changed = true; ann[idx] = { s: working, t: Date.now() }; renderInk(); }
   }
 
+  // press and hold a highlight with the highlighter to switch it to the selected colour
+  var LONG_PRESS = 450, hold = null, holdDone = false;
+  function cancelHold() { if (hold) { clearTimeout(hold.timer); hold = null; } }
+  function holdRecolour(q) {
+    hold = null;
+    if (!drawing || !working) return;
+    var x = q[0] * cssW, y = q[1] * cssH, target = -1;
+    for (var i = working.length - 1; i >= 0; i--) {
+      var st = working[i];
+      if (st.k === "hl" && hit(st, x, y, 6 + st.w * cssW / 2)) { target = i; break; }
+    }
+    if (target < 0 || working[target].c === color) return;   // nothing to change: carry on drawing
+    var copy = {}; Object.keys(working[target]).forEach(function (k) { copy[k] = working[target][k]; });
+    copy.c = color;
+    working = working.slice(); working[target] = copy;
+    changed = true; holdDone = true; cur = null;
+    ann[idx] = { s: working, t: Date.now() };
+    renderInk();
+    try { if (navigator.vibrate) navigator.vibrate(20); } catch (err) {}
+  }
   ink.addEventListener("pointerdown", function (e) {
     if (tool === "move" || !idx) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -609,18 +678,24 @@ footer {
     working = strokes(idx).slice();
     var q = pt(e);
     if (tool === "erase") { eraseAt(q); return; }
+    if (tool === "recolour") { recolourAt(q); return; }
     var hl = tool === "highlight";
     cur = { k: hl ? "hl" : "pen", c: color, a: opacity / 100, w: hl ? sizes.hl * 0.01 : sizes.pen * 0.002, p: [q[0], q[1]], d: Date.now() };
+    holdDone = false; cancelHold();
+    if (hl) hold = { x: e.clientX, y: e.clientY, timer: setTimeout(function () { holdRecolour(q); }, LONG_PRESS) };
     renderInk();
   });
   ink.addEventListener("pointermove", function (e) {
     if (!drawing) return;
     e.preventDefault();
+    if (holdDone) return;   // this press already changed a colour
+    if (hold && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) > 10) cancelHold();
     var evs = (e.getCoalescedEvents && e.getCoalescedEvents()) || [];
     if (!evs.length) evs = [e];
     for (var k = 0; k < evs.length; k++) {
       var q = pt(evs[k]);
       if (tool === "erase") { eraseAt(q); continue; }
+      if (tool === "recolour") { recolourAt(q); continue; }
       if (!cur) continue;
       if (cur.k === "hl" && (straight || e.shiftKey)) {
         cur.p = [cur.p[0], cur.p[1], q[0], cur.p[1]];
@@ -632,8 +707,10 @@ footer {
     renderInk();
   });
   function endStroke() {
+    cancelHold();
     if (!drawing) return;
     drawing = false;
+    holdDone = false;
     if (cur) {
       var ok = cur.k === "hl" ? (cur.p.length >= 4 && Math.abs(cur.p[cur.p.length - 2] - cur.p[0]) > 0.004) : true;
       if (ok) { working.push(cur); changed = true; }
@@ -642,7 +719,7 @@ footer {
     if (changed && snap) {
       snap.logLen = fixedLog.length;
       var kept = working;
-      logRemoved(snap.i, snap.before.filter(function (st) { return kept.indexOf(st) < 0; }));
+      if (tool === "erase") logRemoved(snap.i, snap.before.filter(function (st) { return kept.indexOf(st) < 0; }));
       hist.push(snap); if (hist.length > 100) hist.shift();
       redoStack = [];
       setStrokes(snap.i, working);
@@ -661,7 +738,8 @@ footer {
     pen: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 3.5l4 4L8 20H4v-4L16.5 3.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
     move: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
   };
-  var NAMES = { highlight: "Highlight", pen: "Pen", move: "Move" };
+  ICONS.recolour = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11l6-6 7 7-6 6a2 2 0 01-2.8 0L5 13.8a2 2 0 010-2.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 3l3 2M19.5 15.5s1.5 1.8 1.5 3a1.5 1.5 0 01-3 0c0-1.2 1.5-3 1.5-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var NAMES = { highlight: "Highlight", pen: "Pen", move: "Move", recolour: "Recolour" };
   function setTool(t) {
     tool = t;
     var mb = $("#mainTool");
@@ -782,6 +860,7 @@ footer {
   function syncMenu() {
     document.querySelectorAll("[data-main]").forEach(function (b) { b.classList.toggle("on", b.dataset.main === mainTool); });
     $("#moveHint").hidden = mainTool !== "move";
+    $("#recolourHint").hidden = mainTool !== "recolour";
     $("#opacity").value = opacity; $("#opLabel").textContent = opacity + "%";
     $("#hlSize").value = sizes.hl; $("#hlLabel").textContent = sizes.hl;
     $("#penSize").value = sizes.pen; $("#penLabel").textContent = sizes.pen;
@@ -813,9 +892,7 @@ footer {
         var i = barColors.indexOf(p[0]);
         if (i >= 0) { if (barColors.length === 1) return; barColors.splice(i, 1); }
         else {
-          // keep the bar in palette order
           barColors.push(p[0]);
-          barColors.sort(function (a, c) { return PALETTE.findIndex(function (x) { return x[0] === a; }) - PALETTE.findIndex(function (x) { return x[0] === c; }); });
         }
         savePrefs(); buildSwatches(); buildPalette();
       });
@@ -985,11 +1062,28 @@ footer {
     wbox.innerHTML = "";
     colours.forEach(function (c) {
       var row = document.createElement("div"); row.className = "wrow";
-      var n = r.used[c] || 0;
-      row.innerHTML = '<span class="sw"></span><span class="nm"><span class="cn"></span><br><span class="uses"></span></span><button aria-label="Less">−</button><input type="text" inputmode="decimal" autocomplete="off"><button aria-label="More">+</button>';
+      var n = r.used[c] || 0, onBar = barColors.indexOf(c) >= 0;
+      if (onBar) row.classList.add("onbar");
+      row.dataset.c = c;
+      row.innerHTML = '<span class="grip"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><g fill="currentColor"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/></g></svg></span><span class="sw"></span><span class="nm"><span class="cn"></span><br><span class="uses"></span></span><button aria-label="Less">−</button><input type="text" inputmode="decimal" autocomplete="off"><button aria-label="More">+</button>';
       row.querySelector(".sw").style.background = c;
       row.querySelector(".cn").textContent = colourName(c);
-      row.querySelector(".uses").textContent = n + " mistake" + (n === 1 ? "" : "s") + " in total";
+      row.querySelector(".uses").textContent = n + " mistake" + (n === 1 ? "" : "s") + " in total" + (onBar ? "" : " · not on the bar");
+      var grip = row.querySelector(".grip");
+      if (onBar) {
+        grip.setAttribute("role", "button"); grip.tabIndex = 0;
+        grip.setAttribute("aria-label", "Move " + colourName(c) + ". Drag, or use the up and down arrow keys");
+        enableDrag(grip, row, wbox);
+        grip.addEventListener("keydown", function (e) {
+          if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+          e.preventDefault();
+          var i = barColors.indexOf(c), j = e.key === "ArrowUp" ? i - 1 : i + 1;
+          if (j < 0 || j >= barColors.length) return;
+          barColors[i] = barColors[j]; barColors[j] = c;
+          savePrefs(); buildSwatches(); renderStats();
+          var again = document.querySelector('#weights .wrow[data-c="' + c + '"] .grip'); if (again) again.focus();
+        });
+      } else grip.classList.add("none");
       var box = row.querySelector("input");
       box.value = fmtW(weightOf(c));
       box.setAttribute("aria-label", "Value of " + colourName(c));
@@ -1006,11 +1100,141 @@ footer {
       box.addEventListener("keydown", function (e) { if (e.key === "Enter") box.blur(); });
       wbox.appendChild(row);
     });
+    renderRecolour(r.used);
+    renderFixedDays();
+  }
+
+  // drag a colour row by its handle to reorder the bottom bar
+  function enableDrag(grip, row, wbox) {
+    grip.addEventListener("pointerdown", function (e) {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      e.preventDefault();
+      row.classList.add("dragging");
+      function move(ev) {
+        if (ev.pointerId !== e.pointerId) return;
+        ev.preventDefault();
+        var y = ev.clientY;
+        var others = Array.prototype.filter.call(wbox.querySelectorAll(".wrow.onbar"), function (r) { return r !== row; });
+        var before = null;
+        for (var i = 0; i < others.length; i++) {
+          var rect = others[i].getBoundingClientRect();
+          if (y < rect.top + rect.height / 2) { before = others[i]; break; }
+        }
+        if (before) { if (row.nextSibling !== before) wbox.insertBefore(row, before); }
+        else {
+          var last = others[others.length - 1];
+          if (last && last.nextSibling !== row) wbox.insertBefore(row, last.nextSibling);
+        }
+      }
+      function up(ev) {
+        if (ev && ev.pointerId !== e.pointerId) return;
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+        row.classList.remove("dragging");
+        var order = Array.prototype.map.call(wbox.querySelectorAll(".wrow.onbar"), function (r) { return r.dataset.c; });
+        if (order.join() !== barColors.join()) { barColors = order; savePrefs(); buildSwatches(); }
+        renderStats();
+      }
+      // listen on the window: moving the row in the page can drop the pointer capture
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
+    });
+  }
+
+  function colourCountAll() {
+    var n = {};
+    Object.keys(ann).forEach(function (k) { strokes(+k).forEach(function (st) { if (st.k === "hl") n[st.c] = (n[st.c] || 0) + 1; }); });
+    fixedLog.forEach(function (x) { n[x.c] = (n[x.c] || 0) + 1; });
+    return n;
+  }
+  function renderRecolour() {
+    var counts = colourCountAll();
+    var from = $("#recFrom"), to = $("#recTo"), keepFrom = from.value, keepTo = to.value;
+    from.innerHTML = ""; to.innerHTML = "";
+    var usedCols = Object.keys(counts);
+    usedCols.sort(function (a, c) { return PALETTE.findIndex(function (p) { return p[0] === a; }) - PALETTE.findIndex(function (p) { return p[0] === c; }); });
+    usedCols.forEach(function (c) {
+      var o = document.createElement("option"); o.value = c; o.textContent = colourName(c) + " (" + counts[c] + ")"; from.appendChild(o);
+    });
+    PALETTE.forEach(function (p) { var o = document.createElement("option"); o.value = p[0]; o.textContent = p[1]; to.appendChild(o); });
+    if (keepFrom && counts[keepFrom]) from.value = keepFrom;
+    if (keepTo) to.value = keepTo;
+    $("#recGo").disabled = !usedCols.length;
+    if (!usedCols.length) { var o = document.createElement("option"); o.textContent = "No highlights yet"; from.appendChild(o); }
+  }
+  var recTimer = null;
+  $("#recGo").addEventListener("click", function () {
+    var from = $("#recFrom").value, to = $("#recTo").value, btn = $("#recGo");
+    if (!from || !to) return;
+    if (from === to) { $("#recMsg").textContent = "Pick two different colours."; return; }
+    var counts = colourCountAll(), n = counts[from] || 0;
+    if (!n) return;
+    if (!recTimer) {
+      btn.textContent = "Tap again to change " + n + " highlight" + (n === 1 ? "" : "s");
+      recTimer = setTimeout(function () { btn.textContent = "Change colour"; recTimer = null; }, 4000);
+      return;
+    }
+    clearTimeout(recTimer); recTimer = null; btn.textContent = "Change colour";
+    Object.keys(ann).forEach(function (k) {
+      var list = strokes(+k), hitAny = false;
+      var next = list.map(function (st) {
+        if (st.k !== "hl" || st.c !== from) return st;
+        hitAny = true;
+        var copy = {}; Object.keys(st).forEach(function (q) { copy[q] = st[q]; }); copy.c = to; return copy;
+      });
+      if (hitAny) ann[k] = { s: next, t: Date.now() };
+    });
+    fixedLog.forEach(function (x) { if (x.c === from) x.c = to; });
+    saveLocal(); saveLog();
+    hist = []; redoStack = []; updateUndoRedo();
+    if (barColors.indexOf(to) < 0 && barColors.indexOf(from) >= 0) { barColors[barColors.indexOf(from)] = to; savePrefs(); buildSwatches(); }
+    renderInk();
+    renderStats();
+    $("#recMsg").textContent = "Changed " + n + " highlight" + (n === 1 ? "" : "s") + " from " + colourName(from) + " to " + colourName(to) + ".";
+  });
+
+  function renderFixedDays() {
+    var box = $("#fixedDays");
+    box.innerHTML = "";
+    if (!fixedLog.length) { var e = document.createElement("p"); e.textContent = "No fixed mistakes yet."; box.appendChild(e); return; }
+    var days = {};
+    fixedLog.forEach(function (x) {
+      var d = new Date(x.f || 0), key = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+      if (!days[key]) days[key] = { key: key, label: d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" }), sort: x.f || 0, n: 0, cols: {} };
+      days[key].n++; days[key].cols[x.c] = (days[key].cols[x.c] || 0) + 1;
+      if ((x.f || 0) > days[key].sort) days[key].sort = x.f;
+    });
+    Object.keys(days).map(function (k) { return days[k]; }).sort(function (a, b) { return b.sort - a.sort; }).forEach(function (d) {
+      var row = document.createElement("div"); row.className = "drow";
+      row.innerHTML = '<div class="dt"><b></b><div class="chips"></div></div><button>Remove</button>';
+      row.querySelector("b").textContent = d.label + " · " + d.n + " fixed";
+      var chips = row.querySelector(".chips");
+      Object.keys(d.cols).forEach(function (c) {
+        var sp = document.createElement("span"); var dot = document.createElement("i"); dot.style.background = c;
+        sp.appendChild(dot); sp.appendChild(document.createTextNode(colourName(c) + " " + d.cols[c])); chips.appendChild(sp);
+      });
+      var btn = row.querySelector("button"), t = null;
+      btn.setAttribute("aria-label", "Remove the " + d.n + " fixed mistakes erased on " + d.label);
+      btn.addEventListener("click", function () {
+        if (!t) { btn.textContent = "Sure?"; t = setTimeout(function () { btn.textContent = "Remove"; t = null; }, 3000); return; }
+        clearTimeout(t);
+        fixedLog = fixedLog.filter(function (x) {
+          var dd = new Date(x.f || 0);
+          return (dd.getFullYear() + "-" + (dd.getMonth() + 1) + "-" + dd.getDate()) !== d.key;
+        });
+        saveLog();
+        hist = []; redoStack = []; updateUndoRedo();
+        renderStats();
+      });
+      box.appendChild(row);
+    });
   }
   var statsSheet = $("#stats");
   function openStats() { renderStats(); statsSheet.classList.add("open"); statsSheet.scrollTop = 0; }
   function closeStats() { statsSheet.classList.remove("open"); }
-  $("#statsBtn").addEventListener("click", openStats);
+  $("#statsTop").addEventListener("click", openStats);
   $("#statsBack").addEventListener("click", closeStats);
   document.querySelectorAll("[data-period]").forEach(function (b) { b.addEventListener("click", function () { statPeriod = +b.dataset.period; savePrefs(); renderStats(); }); });
   document.querySelectorAll("[data-sort]").forEach(function (b) { b.addEventListener("click", function () { statSort = b.dataset.sort; savePrefs(); renderStats(); }); });

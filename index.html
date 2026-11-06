@@ -35,6 +35,7 @@
   --stage: #121618; --panel: #1c2225; --ink: #e5ece8; --muted: #93a19a;
   --line: #333d41; --accent: #5cc9a0; --accent-ink: #0d1a14; --btn: #252d31; --shadow: rgba(0,0,0,0.6);
 }
+[hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
 html { background: var(--stage); }
 body { background: var(--stage); color: var(--ink); font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
@@ -101,6 +102,24 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
   box-shadow: 0 1px 6px var(--shadow);
 }
 
+/* shown when the drawing tool is Move or Recolour */
+#backHl {
+  position: absolute; z-index: 7; left: 50%; transform: translateX(-50%); bottom: 72px;
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
+  padding: 8px 14px; min-height: 42px; border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
+  box-shadow: 0 2px 12px var(--shadow); font-size: 14px;
+}
+#backHl[hidden] { display: none; }
+#backHl .mode { opacity: .85; font-size: 13px; }
+#backHl .mode::after { content: "·"; margin-left: 8px; }
+
+/* sign-in reminder (sits where the back-to-highlighter button would) */
+#nag { position: absolute; z-index: 7; left: 50%; transform: translateX(-50%); bottom: 72px; display: flex; align-items: center; gap: 4px; white-space: nowrap; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 4px 4px 14px; box-shadow: 0 2px 12px var(--shadow); font-size: 13.5px; }
+#nag[hidden] { display: none; }
+#nag button { min-height: 34px; padding: 4px 12px; border-radius: 999px; }
+#nag .x { background: transparent; border-color: transparent; padding: 4px 10px; }
+
 /* bottom bar */
 footer {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
@@ -150,6 +169,17 @@ footer {
 #offBar i { display: block; height: 100%; width: 0; background: var(--accent); }
 .note { font-size: 13.5px; color: var(--ink); min-height: 1.2em; }
 #stats { z-index: 31; }
+#acct { z-index: 32; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; color: var(--muted); }
+.field input { font-size: 16px; padding: 9px 10px; min-height: 42px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); color: var(--ink); }
+.gbtn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 44px; font-weight: 600; }
+.or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+.or::before, .or::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+.linkbtn { background: none; border: 0; padding: 4px 0; min-height: 0; color: var(--accent); text-decoration: underline; font-size: 13.5px; cursor: pointer; }
+.err { color: #c0392b; font-size: 13.5px; min-height: 1.2em; }
+.syncline { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.syncdot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+.syncdot.ok { background: #2fb36a; } .syncdot.busy { background: #f5c400; } .syncdot.off { background: #8b949e; } .syncdot.bad { background: #e23b3b; }
 .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .card2 { background: var(--btn); border: 1px solid var(--line); border-radius: 10px; padding: 10px; text-align: center; }
 .card2 b { display: block; font-size: 20px; line-height: 1.2; }
@@ -214,6 +244,9 @@ footer {
     <button id="redoBtn" class="ib" aria-label="Redo" title="Redo"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14l5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
   </div>
 
+  <div id="nag" hidden role="status"><span>Notes are only on this device</span><button id="nagSignIn" class="primary">Sign in</button><button id="nagX" class="x" aria-label="Not now">✕</button></div>
+  <button id="backHl" hidden><span class="mode" id="backMode"></span><b>Back to highlighter</b></button>
+
   <footer>
     <button id="mainTool" class="ib" aria-label="Highlight" title="Highlight"></button>
     <button id="eraseBtn" class="ib" aria-label="Erase" title="Erase"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4.5l5 5-9 9H6l-2.5-2.5a1.5 1.5 0 010-2.1L14.5 4.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 10l5 5M10.5 18.5H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
@@ -228,6 +261,12 @@ footer {
     <button id="menuClose" class="primary">Close</button>
   </div>
   <div class="body">
+    <section id="acctSec">
+      <h3>Account</h3>
+      <div class="syncline"><span class="syncdot" id="menuDot"></span><span id="menuAcct">Not signed in</span></div>
+      <div class="row"><button id="acctBtn" class="primary">Sign in</button></div>
+    </section>
+
     <section>
       <h3>Drawing tool</h3>
       <p>The first button on the bottom bar uses this tool.</p>
@@ -363,8 +402,52 @@ footer {
     </section>
   </div>
 </div>
+<div id="acct" class="sheet" role="dialog" aria-modal="true" aria-labelledby="acctTitle">
+  <div class="top">
+    <h2 id="acctTitle">Your account<span class="where" id="acctSub">Back up your notes and use them on all your devices</span></h2>
+    <button id="acctClose" class="primary">Close</button>
+  </div>
+  <div class="body">
+    <div id="acctOut">
+      <section>
+        <p>Sign in and every highlight is saved to your account as you make it. If you clear your browser, change phone or use the app on another device, sign in and your notes come back. Notes you already have on this device are added to your account.</p>
+        <button id="gBtn" class="gbtn"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>
+        <div class="or">or use email</div>
+        <label class="field">Email<input id="aEmail" type="email" autocomplete="email" inputmode="email"></label>
+        <label class="field">Password<input id="aPass" type="password" autocomplete="current-password" minlength="6"></label>
+        <div class="row">
+          <button id="aSignIn" class="primary">Sign in</button>
+          <button id="aCreate">Create account</button>
+          <span class="grow"></span>
+          <button id="aForgot" class="linkbtn">Forgot password?</button>
+        </div>
+        <p class="err" id="aErr" role="alert"></p>
+        <p>Only your email address, your markings and your app settings are stored. You can delete your account and everything in it at any time.</p>
+        <div class="row" id="skipRow" hidden><button id="aSkip">Skip for now</button></div>
+      </section>
+    </div>
+    <div id="acctIn" hidden>
+      <section>
+        <p>Signed in as <b id="aWho"></b></p>
+        <div class="syncline"><span class="syncdot" id="acctDot"></span><span id="acctSync">Connecting…</span></div>
+        <p>Your notes, fixed mistakes and settings save to your account automatically and appear on any device where you sign in.</p>
+      </section>
+      <section>
+        <div class="row"><button id="aOut">Sign out</button></div>
+        <p>Signing out removes the notes from this device. They stay safe in your account.</p>
+        <p class="err" id="aOutErr" role="alert"></p>
+      </section>
+      <section>
+        <div class="row"><button id="aDelete">Delete account</button></div>
+        <p>Permanently deletes your account and all the notes in it.</p>
+      </section>
+    </div>
+    <p id="acctOff" hidden>Accounts are not set up for this app yet.</p>
+  </div>
+</div>
 <input id="bkFile" type="file" accept=".json,application/json,text/plain" hidden>
 
+<script src="firebase-config.js"></script>
 <script>
 (function () {
   "use strict";
@@ -449,9 +532,19 @@ footer {
     } catch (e) {}
   })();
   tool = mainTool;
-  function savePrefs() {
+  function savePrefs(fromCloud) {
     lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, mainTool: mainTool, barColors: barColors, weights: weights, statPeriod: statPeriod, statSort: statSort, groupJ30: groupJ30, showZero: showZero }));
+    // settings that follow you between devices
+    var shared = JSON.stringify(sharedPrefs());
+    if (shared !== lastShared) {
+      lastShared = shared;
+      if (fromCloud !== true) { prefsT = Date.now(); lsSet(LS_PREFS_T, String(prefsT)); cloudPrefs(); }
+    }
   }
+  var LS_PREFS_T = "mushaf-notes:v2:prefsTime";
+  var prefsT = parseInt(lsGet(LS_PREFS_T), 10) || 0;
+  function sharedPrefs() { return { opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, barColors: barColors, weights: weights, groupJ30: groupJ30, showZero: showZero, statSort: statSort }; }
+  var lastShared = JSON.stringify(sharedPrefs());
   var saveTimer = null, askedPersist = false;
   function saveLocal() {
     clearTimeout(saveTimer);
@@ -462,7 +555,9 @@ footer {
   }
   function askPersist() { try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {} }
   function strokes(i) { return (ann[i] && ann[i].s) || []; }
-  function setStrokes(i, s) { ann[i] = { s: s, t: Date.now() }; saveLocal(); }
+  function setStrokes(i, s) { ann[i] = { s: s, t: Date.now() }; saveLocal(); cloudPage(i); }
+  // a page whose fixed mistakes changed without its highlights changing
+  function touchPage(i) { if (!ann[i]) ann[i] = { s: [], t: 0 }; ann[i].t = Date.now(); saveLocal(); cloudPage(i); }
 
   /* ---------- page loading ---------- */
   // pages may sit at the top of the site (001.jpg) or in a pages/ folder (pages/001.jpg)
@@ -521,6 +616,7 @@ footer {
     $("#sides").style.bottom = footH + "px"; $("#sides").style.top = headH + "px";
     $("#history").style.top = (headH + 8) + "px";
     $("#statsTop").style.top = (headH + 8) + "px";
+    $("#backHl").style.bottom = (footH + 10) + "px";
     var nw = img.naturalWidth || 750, nh = img.naturalHeight || 1072;
     var availW = Math.max(120, stage.clientWidth - 8);
     var availH = Math.max(160, stage.clientHeight - 8);
@@ -552,6 +648,7 @@ footer {
   document.addEventListener("keydown", function (e) {
     var t = e.target && e.target.tagName;
     if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT") return;
+    if (acct.classList.contains("open")) { if (e.key === "Escape") closeAcct(); return; }
     if (statsSheet.classList.contains("open")) { if (e.key === "Escape") closeStats(); return; }
     if (menu.classList.contains("open")) { if (e.key === "Escape") closeMenu(); return; }
     if (e.key === "ArrowLeft") { e.preventDefault(); $("#turnL").click(); }
@@ -561,19 +658,40 @@ footer {
     else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) { e.preventDefault(); redo(); }
     else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); }
   });
-  // swipe to turn pages with the Move tool (only when the page is not zoomed wider than the screen)
+  // Swipe to turn pages: on the grey area around the page with any tool, or anywhere with the Move tool.
+  // Like a mushaf, swiping right goes to the next page (reversed if the turn buttons are swapped).
+  // Ignored when the page is zoomed wider than the screen, so sideways scrolling still works.
   var sw = null;
-  stage.addEventListener("touchstart", function (e) {
-    if (tool !== "move" || e.touches.length !== 1) { sw = null; return; }
-    sw = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
-  }, { passive: true });
-  stage.addEventListener("touchend", function (e) {
-    if (!sw || tool !== "move") return;
-    var t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
-    var wide = stage.scrollWidth > stage.clientWidth + 2;
-    if (!wide && Math.abs(dx) > 60 && Math.abs(dy) < 50 && Date.now() - sw.t < 700) { if (dx > 0) nextPage(); else prevPage(); }
+  function onPage(target) { return !!(target && target.closest && target.closest("#sheet")); }
+  function swipeStart(x, y, target) {
+    if (!onPage(target) || tool === "move") sw = { x: x, y: y, t: Date.now() }; else sw = null;
+  }
+  function swipeEnd(x, y) {
+    if (!sw) return;
+    var dx = x - sw.x, dy = y - sw.y, quick = Date.now() - sw.t < 800;
     sw = null;
+    var wide = stage.scrollWidth > stage.clientWidth + 2;
+    if (wide || !quick || Math.abs(dx) < 50 || Math.abs(dy) > Math.max(50, Math.abs(dx) * 0.6)) return;
+    var forward = dx > 0;
+    if (swapTurn) forward = !forward;
+    if (forward) nextPage(); else prevPage();
+  }
+  stage.addEventListener("touchstart", function (e) {
+    if (e.touches.length !== 1) { sw = null; return; }
+    swipeStart(e.touches[0].clientX, e.touches[0].clientY, e.target);
   }, { passive: true });
+  stage.addEventListener("touchmove", function (e) { if (e.touches.length !== 1) sw = null; }, { passive: true });
+  stage.addEventListener("touchend", function (e) {
+    var t = e.changedTouches[0];
+    if (t) swipeEnd(t.clientX, t.clientY);
+  }, { passive: true });
+  // with a mouse, drag across the grey area
+  stage.addEventListener("pointerdown", function (e) {
+    if (e.pointerType === "mouse" && e.button === 0) swipeStart(e.clientX, e.clientY, e.target);
+  });
+  window.addEventListener("pointerup", function (e) {
+    if (e.pointerType === "mouse") swipeEnd(e.clientX, e.clientY);
+  });
   var rt = null;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { fitSwatches(); if (idx) layout(); }, 150); });
 
@@ -747,10 +865,15 @@ footer {
     mb.setAttribute("aria-label", NAMES[mainTool]); mb.title = NAMES[mainTool];
     mb.classList.toggle("on", t === mainTool);
     $("#eraseBtn").classList.toggle("on", t === "erase");
+    var away = mainTool === "move" || mainTool === "recolour";
+    $("#backHl").hidden = !away;
+    $("#backMode").textContent = mainTool === "move" ? "Move mode" : "Recolour mode";
+    updateNag();
     ink.style.touchAction = t === "move" ? "auto" : "none";
     ink.style.cursor = t === "move" ? "default" : (t === "erase" ? "cell" : "crosshair");
   }
   $("#mainTool").addEventListener("click", function () { setTool(mainTool); });
+  $("#backHl").addEventListener("click", function () { mainTool = "highlight"; savePrefs(); setTool("highlight"); syncMenu(); });
   $("#eraseBtn").addEventListener("click", function () { setTool("erase"); });
 
   function buildSwatches() {
@@ -1186,7 +1309,9 @@ footer {
       });
       if (hitAny) ann[k] = { s: next, t: Date.now() };
     });
-    fixedLog.forEach(function (x) { if (x.c === from) x.c = to; });
+    var fixPages = {};
+    fixedLog.forEach(function (x) { if (x.c === from) { x.c = to; fixPages[x.i] = 1; } });
+    Object.keys(fixPages).forEach(function (k) { touchPage(+k); });
     saveLocal(); saveLog();
     hist = []; redoStack = []; updateUndoRedo();
     if (barColors.indexOf(to) < 0 && barColors.indexOf(from) >= 0) { barColors[barColors.indexOf(from)] = to; savePrefs(); buildSwatches(); }
@@ -1220,6 +1345,9 @@ footer {
       btn.addEventListener("click", function () {
         if (!t) { btn.textContent = "Sure?"; t = setTimeout(function () { btn.textContent = "Remove"; t = null; }, 3000); return; }
         clearTimeout(t);
+        var touched = {};
+        fixedLog.forEach(function (x) { var dd = new Date(x.f || 0); if ((dd.getFullYear() + "-" + (dd.getMonth() + 1) + "-" + dd.getDate()) === d.key) touched[x.i] = 1; });
+        setTimeout(function () { Object.keys(touched).forEach(function (k) { touchPage(+k); }); }, 0);
         fixedLog = fixedLog.filter(function (x) {
           var dd = new Date(x.f || 0);
           return (dd.getFullYear() + "-" + (dd.getMonth() + 1) + "-" + dd.getDate()) !== d.key;
@@ -1261,7 +1389,7 @@ footer {
       o.fixed.forEach(function (x) {
         if (!x || typeof x.i !== "number") return;
         var key = x.i + "|" + x.y + "|" + x.c + "|" + x.d + "|" + x.f;
-        if (!seen[key]) { seen[key] = 1; fixedLog.push({ i: x.i, y: +x.y || 0, c: x.c, d: +x.d || 0, f: +x.f || 0 }); }
+        if (!seen[key]) { seen[key] = 1; fixedLog.push({ i: x.i, y: +x.y || 0, c: x.c, d: +x.d || 0, f: +x.f || 0 }); touchPage(x.i); }
       });
       saveLog();
     }
@@ -1381,6 +1509,311 @@ footer {
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
   }
 
+  /* ---------- account and sync (Firebase) ---------- */
+  // Notes are always saved on the device first. When signed in, each changed page is also
+  // saved to the account; the newest version of a page wins when devices disagree.
+  var FB_SDK = window.MUSHAF_FIREBASE_SDK || "https://www.gstatic.com/firebasejs/12.19.0/";
+  var fb = { app: null, au: null, fs: null, auth: null, db: null, user: null, unsub: [], dirty: {}, prefsDirty: false, timer: null, merged: false, pending: false, fromCache: true, failed: false, loading: false, loadFailed: false };
+  var LS_PROMPTED = "mushaf-notes:v2:acctPrompted", LS_NAG = "mushaf-notes:v2:nagAt";
+  var acct = $("#acct");
+  function fbConfigured() { var c = window.FIREBASE_CONFIG; return !!(c && c.apiKey && c.projectId && c.appId); }
+
+  function cloudPage(i) {
+    updateNag();
+    if (!fb.user) return;
+    fb.dirty[i] = true;
+    scheduleFlush();
+  }
+  function cloudPrefs() { if (!fb.user) return; fb.prefsDirty = true; scheduleFlush(); }
+  function scheduleFlush() { clearTimeout(fb.timer); fb.timer = setTimeout(flushCloud, 1200); updateSyncUI(); }
+  function pagePayload(i) {
+    return { s: strokes(i), f: fixedLog.filter(function (x) { return x.i === i; }), t: (ann[i] && ann[i].t) || Date.now() };
+  }
+  function flushCloud() {
+    clearTimeout(fb.timer);
+    if (!fb.user || !fb.db) return;
+    var uid = fb.user.uid, F = fb.fs;
+    var ids = Object.keys(fb.dirty);
+    fb.dirty = {};
+    var writes = ids.map(function (k) { return [F.doc(fb.db, "users", uid, "pages", String(k)), pagePayload(+k)]; });
+    if (fb.prefsDirty) { fb.prefsDirty = false; writes.push([F.doc(fb.db, "users", uid, "meta", "prefs"), { p: sharedPrefs(), t: prefsT || Date.now() }]); }
+    for (var a = 0; a < writes.length; a += 400) {
+      var batch = F.writeBatch(fb.db);
+      writes.slice(a, a + 400).forEach(function (w) { batch.set(w[0], w[1]); });
+      // the change is saved locally straight away; this resolves once the server has it
+      batch.commit().catch(function (err) { fb.failed = true; console.warn("Sync failed", err); updateSyncUI(); });
+    }
+    if (writes.length) fb.pending = true;
+    updateSyncUI();
+  }
+
+  function startSync(u) {
+    var F = fb.fs;
+    fb.merged = false;
+    fb.unsub.push(F.onSnapshot(F.collection(fb.db, "users", u.uid, "pages"), { includeMetadataChanges: true }, function (qs) {
+      fb.pending = qs.metadata.hasPendingWrites;
+      fb.fromCache = qs.metadata.fromCache;
+      applyPages(qs);
+      updateSyncUI();
+    }, function (err) { fb.failed = true; console.warn("Sync failed", err); updateSyncUI(); }));
+    fb.unsub.push(F.onSnapshot(F.doc(fb.db, "users", u.uid, "meta", "prefs"), function (d) {
+      var b = d.exists() ? d.data() : null;
+      if (b && b.p && (b.t || 0) > prefsT) applyPrefs(b.p, b.t);
+      else if (!d.metadata.fromCache && prefsT && (!b || prefsT > (b.t || 0))) cloudPrefs();
+    }, function () {}));
+  }
+
+  function applyPages(qs) {
+    var remoteT = {}, any = false, current = false;
+    qs.docs.forEach(function (d) {
+      var i = parseInt(d.id, 10), b = d.data();
+      if (!(i >= FIRST && i <= LAST) || !b) return;
+      remoteT[i] = b.t || 0;
+      if (fb.dirty[i]) return;   // a newer change from this device is about to be sent
+      var lt = (ann[i] && ann[i].t) || 0;
+      if ((b.t || 0) > lt) {
+        ann[i] = { s: Array.isArray(b.s) ? b.s : [], t: b.t || 0 };
+        fixedLog = fixedLog.filter(function (x) { return x.i !== i; }).concat(Array.isArray(b.f) ? b.f : []);
+        any = true;
+        if (i === idx) current = true;
+      }
+    });
+    if (any) {
+      lsSet(LS_NOTES, JSON.stringify(ann)); saveLog();
+      hist = []; redoStack = []; updateUndoRedo();
+      if (current && !drawing) renderInk();
+      if (statsSheet.classList.contains("open")) renderStats();
+    }
+    // first time the server answers: send up anything only this device has, or has newer
+    if (!qs.metadata.fromCache && !fb.merged) {
+      fb.merged = true;
+      var pages = {};
+      Object.keys(ann).forEach(function (k) { pages[k] = 1; });
+      fixedLog.forEach(function (x) { pages[x.i] = 1; });
+      Object.keys(pages).forEach(function (k) {
+        var i = +k, lt = (ann[i] && ann[i].t) || 0;
+        var hasContent = strokes(i).length > 0 || fixedLog.some(function (x) { return x.i === i; });
+        var send = (i in remoteT) ? lt > remoteT[i] : hasContent;
+        if (send) { if (!ann[i]) ann[i] = { s: [], t: Date.now() }; fb.dirty[i] = true; }
+      });
+      if (Object.keys(fb.dirty).length) scheduleFlush();
+    }
+  }
+
+  function applyPrefs(p, t) {
+    if (typeof p.opacity === "number") opacity = p.opacity;
+    if (p.sizes && typeof p.sizes === "object") sizes = p.sizes;
+    if (typeof p.straight === "boolean") straight = p.straight;
+    if (typeof p.swapTurn === "boolean") swapTurn = p.swapTurn;
+    if (Array.isArray(p.barColors) && p.barColors.length) barColors = p.barColors;
+    if (p.weights && typeof p.weights === "object") weights = p.weights;
+    if (typeof p.groupJ30 === "boolean") groupJ30 = p.groupJ30;
+    if (typeof p.showZero === "boolean") showZero = p.showZero;
+    if (p.statSort) statSort = p.statSort;
+    prefsT = t; lsSet(LS_PREFS_T, String(prefsT));
+    savePrefs(true);
+    buildSwatches(); updateTurns();
+    if (menu.classList.contains("open")) syncMenu();
+    if (statsSheet.classList.contains("open")) renderStats();
+  }
+
+  /* status shown in the menu and on the account screen */
+  function syncStatus() {
+    var off = navigator.onLine === false;
+    if (!fbConfigured()) return { cls: "off", text: "Accounts not set up" };
+    if (!fb.auth) return { cls: "off", text: fb.loadFailed ? "Account service not reachable right now" : "Not signed in" };
+    if (!fb.user) return { cls: "off", text: "Not signed in · notes only on this device" };
+    if (fb.failed) return { cls: "bad", text: "Sync problem · notes are safe on this device" };
+    if (Object.keys(fb.dirty).length || fb.prefsDirty || fb.pending) return { cls: "busy", text: off ? "Offline · changes will sync when you reconnect" : "Saving…" };
+    if (fb.fromCache) return { cls: "busy", text: off ? "Offline · will sync when you reconnect" : "Connecting…" };
+    return { cls: "ok", text: "Synced" };
+  }
+  function updateSyncUI() {
+    var st = syncStatus();
+    $("#menuDot").className = "syncdot " + st.cls;
+    $("#acctDot").className = "syncdot " + st.cls;
+    $("#acctSync").textContent = st.text;
+    $("#menuAcct").textContent = fb.user ? (fb.user.email || "Signed in") + " · " + st.text : st.text;
+    $("#acctBtn").textContent = fb.user ? "Account" : "Sign in";
+    $("#acctSec").hidden = !fbConfigured();
+    updateNag();
+  }
+  window.addEventListener("online", function () { if (fbConfigured() && !fb.auth) startAccounts(); updateSyncUI(); });
+  window.addEventListener("offline", updateSyncUI);
+
+  /* gentle reminder for people who have notes but have not signed in */
+  function hasNotes() { return fixedLog.length > 0 || Object.keys(ann).some(function (k) { return strokes(+k).length > 0; }); }
+  function updateNag() {
+    var due = Date.now() - (parseInt(lsGet(LS_NAG), 10) || 0) > 7 * 86400000;
+    $("#nag").hidden = !(fbConfigured() && fb.auth && !fb.user && due && $("#backHl").hidden && hasNotes());
+  }
+  $("#nagSignIn").addEventListener("click", function () { openAcct(false); });
+  $("#nagX").addEventListener("click", function () { lsSet(LS_NAG, String(Date.now())); updateNag(); });
+
+  /* account screen */
+  function openAcct(first) {
+    var on = !!fb.user, cfg = fbConfigured();
+    $("#acctOff").hidden = cfg;
+    $("#acctOut").hidden = on || !cfg;
+    $("#acctIn").hidden = !on;
+    $("#skipRow").hidden = !first;
+    $("#acctSub").textContent = on ? "You are signed in" : "Back up your notes and use them on all your devices";
+    if (on) $("#aWho").textContent = fb.user.email || "your account";
+    $("#aErr").textContent = ""; $("#aOutErr").textContent = "";
+    updateSyncUI();
+    acct.classList.add("open"); acct.scrollTop = 0;
+  }
+  function closeAcct() { acct.classList.remove("open"); }
+  $("#acctBtn").addEventListener("click", function () { openAcct(false); });
+  $("#acctClose").addEventListener("click", closeAcct);
+  $("#aSkip").addEventListener("click", function () { lsSet(LS_PROMPTED, "1"); closeAcct(); });
+
+  function authMsg(err) {
+    var c = (err && err.code) || "";
+    var m = {
+      "auth/invalid-credential": "That email or password is not right.",
+      "auth/invalid-login-credentials": "That email or password is not right.",
+      "auth/wrong-password": "That email or password is not right.",
+      "auth/user-not-found": "There is no account with that email. Tap Create account to make one.",
+      "auth/invalid-email": "That email address does not look right.",
+      "auth/missing-email": "Enter your email address.",
+      "auth/email-already-in-use": "There is already an account with that email. Tap Sign in instead.",
+      "auth/weak-password": "Use a password of at least 6 characters.",
+      "auth/missing-password": "Enter your password.",
+      "auth/too-many-requests": "Too many tries. Wait a few minutes and try again.",
+      "auth/network-request-failed": "No connection. Check your internet and try again.",
+      "auth/popup-blocked": "The browser blocked the Google window. Allow pop-ups, or sign in with email instead.",
+      "auth/operation-not-supported-in-this-environment": "Google sign-in does not work in this browser. Sign in with email instead.",
+      "auth/web-storage-unsupported": "This browser is blocking sign-in. Try Chrome or Safari, or sign in with email.",
+      "auth/operation-not-allowed": "This way of signing in is not switched on in Firebase yet.",
+      "auth/unauthorized-domain": "This web address is not on Firebase’s list of authorised domains yet.",
+      "auth/requires-recent-login": "For safety, sign out, sign in again, then try once more."
+    };
+    return m[c] || ("Something went wrong" + (c ? " (" + c + ")" : "") + ". Try again.");
+  }
+  function needAuth(errBox) {
+    if (fb.auth) return true;
+    errBox.textContent = "Can’t reach the account service. Check your connection and try again.";
+    startAccounts();
+    return false;
+  }
+  async function runAuth(btn, fn) {
+    var err = $("#aErr");
+    err.textContent = "";
+    if (!needAuth(err)) return;
+    var label = btn.textContent;
+    btn.disabled = true;
+    try { await fn(); $("#aPass").value = ""; }
+    catch (e) {
+      if (e && (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request")) return;
+      err.textContent = authMsg(e);
+    } finally { btn.disabled = false; btn.textContent = label; }
+  }
+  function creds() { return [$("#aEmail").value.trim(), $("#aPass").value]; }
+  $("#aSignIn").addEventListener("click", function () {
+    var c = creds();
+    if (!c[0] || !c[1]) { $("#aErr").textContent = "Enter your email and password."; return; }
+    runAuth(this, function () { return fb.au.signInWithEmailAndPassword(fb.auth, c[0], c[1]); });
+  });
+  $("#aCreate").addEventListener("click", function () {
+    var c = creds();
+    if (!c[0] || !c[1]) { $("#aErr").textContent = "Enter an email and choose a password of at least 6 characters."; return; }
+    runAuth(this, function () { return fb.au.createUserWithEmailAndPassword(fb.auth, c[0], c[1]); });
+  });
+  $("#aForgot").addEventListener("click", function () {
+    var e = creds()[0];
+    if (!e) { $("#aErr").textContent = "Enter your email first, then tap Forgot password."; return; }
+    if (!needAuth($("#aErr"))) return;
+    fb.au.sendPasswordResetEmail(fb.auth, e)
+      .then(function () { $("#aErr").textContent = "If there is an account for " + e + ", a reset link is on its way. Check your inbox and spam."; })
+      .catch(function (err) { $("#aErr").textContent = authMsg(err); });
+  });
+  $("#gBtn").addEventListener("click", function () {
+    runAuth(this, function () { return fb.au.signInWithPopup(fb.auth, new fb.au.GoogleAuthProvider()); });
+  });
+
+  function wipeLocal() {
+    ann = {}; fixedLog = []; hist = []; redoStack = [];
+    lsSet(LS_NOTES, "{}"); saveLog();
+    prefsT = 0; lsSet(LS_PREFS_T, "0");
+    updateUndoRedo(); renderInk();
+    if (statsSheet.classList.contains("open")) renderStats();
+  }
+  function stopSync() { fb.unsub.forEach(function (f) { try { f(); } catch (e) {} }); fb.unsub = []; }
+  function withTimeout(p, ms) { return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error("timeout")); }, ms); })]); }
+
+  $("#aOut").addEventListener("click", async function () {
+    var btn = this, msg = $("#aOutErr");
+    msg.textContent = "";
+    btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      flushCloud();
+      await withTimeout(fb.fs.waitForPendingWrites(fb.db), 10000);
+    } catch (e) {
+      btn.disabled = false; btn.textContent = "Sign out";
+      msg.textContent = "Some changes have not reached your account yet. Connect to the internet, then sign out.";
+      return;
+    }
+    stopSync();
+    try { await fb.au.signOut(fb.auth); } catch (e) {}
+    wipeLocal();
+    btn.disabled = false; btn.textContent = "Sign out";
+    closeAcct();
+  });
+
+  var delTimer = null;
+  $("#aDelete").addEventListener("click", async function () {
+    var btn = this, msg = $("#aOutErr");
+    if (!delTimer) { btn.textContent = "Tap again to delete everything"; delTimer = setTimeout(function () { btn.textContent = "Delete account"; delTimer = null; }, 4000); return; }
+    clearTimeout(delTimer); delTimer = null;
+    btn.disabled = true; btn.textContent = "Deleting…"; msg.textContent = "";
+    var u = fb.user, F = fb.fs;
+    try {
+      stopSync();
+      var snap = await F.getDocs(F.collection(fb.db, "users", u.uid, "pages"));
+      var refs = snap.docs.map(function (d) { return d.ref; }).concat([F.doc(fb.db, "users", u.uid, "meta", "prefs")]);
+      for (var a = 0; a < refs.length; a += 400) {
+        var batch = F.writeBatch(fb.db);
+        refs.slice(a, a + 400).forEach(function (r) { batch.delete(r); });
+        await withTimeout(batch.commit(), 15000);
+      }
+      await fb.au.deleteUser(u);
+      wipeLocal();
+      closeAcct();
+    } catch (e) {
+      msg.textContent = e && e.message === "timeout" ? "No connection. Connect to the internet and try again." : authMsg(e);
+      if (fb.user) startSync(fb.user);
+    } finally { btn.disabled = false; btn.textContent = "Delete account"; }
+  });
+
+  function onUser(u) {
+    stopSync();
+    fb.user = u || null; fb.failed = false; fb.fromCache = true; fb.pending = false; fb.dirty = {}; fb.prefsDirty = false;
+    if (u) { lsSet(LS_PROMPTED, "1"); startSync(u); }
+    if (acct.classList.contains("open")) openAcct(false);
+    updateSyncUI();
+    if (!u && fbConfigured() && !lsGet(LS_PROMPTED)) openAcct(true);
+  }
+
+  async function startAccounts() {
+    updateSyncUI();
+    if (!fbConfigured() || fb.auth || fb.loading) return;
+    fb.loading = true;
+    try {
+      var mods = await Promise.all([import(FB_SDK + "firebase-app.js"), import(FB_SDK + "firebase-auth.js"), import(FB_SDK + "firebase-firestore.js")]);
+      fb.au = mods[1]; fb.fs = mods[2];
+      fb.app = mods[0].initializeApp(window.FIREBASE_CONFIG);
+      try { fb.db = fb.fs.initializeFirestore(fb.app, { localCache: fb.fs.persistentLocalCache({ tabManager: fb.fs.persistentMultipleTabManager() }) }); }
+      catch (e) { fb.db = fb.fs.getFirestore(fb.app); }
+      fb.auth = fb.au.getAuth(fb.app);
+      fb.loadFailed = false;
+      fb.au.onAuthStateChanged(fb.auth, onUser);
+    } catch (e) {
+      console.warn("Account service unavailable", e);
+      fb.loadFailed = true;
+    } finally { fb.loading = false; updateSyncUI(); }
+  }
+
   /* ---------- start ---------- */
   buildSwatches();
   setTool(mainTool);
@@ -1388,6 +1821,7 @@ footer {
   updateTurns();
   var last = parseInt(lsGet(LS_PAGE), 10);
   show(last >= FIRST && last <= LAST ? last : 1 + OFFSET);
+  startAccounts();
 })();
 </script>
 </body>

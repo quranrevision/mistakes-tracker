@@ -1,10 +1,12 @@
 /* Mushaf Notes service worker: keeps the app and pages available offline. */
-const SHELL_CACHE = "mn-shell-v3";
+const SHELL_CACHE = "mn-shell-v4";
+const LIB_CACHE = "mn-lib-v1";
 const PAGE_CACHE = "mn-pages-v1";
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./firebase-config.js",
   "./icon-192.png",
   "./icon-512.png",
   "./maskable-512.png",
@@ -12,7 +14,7 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(SHELL_CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(SHELL_CACHE).then((c) => Promise.all(SHELL.map((u) => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (event) => {
@@ -27,6 +29,20 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+
+  // The Firebase library files never change for a given version: keep them so sign-in works offline.
+  if (url.origin === "https://www.gstatic.com" && url.pathname.startsWith("/firebasejs/")) {
+    event.respondWith(
+      caches.open(LIB_CACHE).then(async (cache) => {
+        const hit = await cache.match(req);
+        if (hit) return hit;
+        const res = await fetch(req);
+        if (res.ok) cache.put(req, res.clone());
+        return res;
+      })
+    );
+    return;
+  }
   if (url.origin !== self.location.origin) return;
 
   // Page images never change: serve from the cache, fetch and keep them the first time.

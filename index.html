@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Mushaf Notes</title>
 <meta name="description" content="Read and annotate the Madinah Mushaf.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -38,6 +38,7 @@
 [hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
 html { background: var(--stage); }
+html, body { touch-action: pan-x pan-y; }   /* the browser may scroll but never zoom the app itself */
 body { background: var(--stage); color: var(--ink); font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
 #app { position: relative; height: 100%; overflow: hidden; }
 button, input, select { font: inherit; color: inherit; }
@@ -830,7 +831,7 @@ footer {
     try { if (navigator.vibrate) navigator.vibrate(20); } catch (err) {}
   }
   ink.addEventListener("pointerdown", function (e) {
-    if (tool === "move" || !idx) return;
+    if (tool === "move" || !idx || drawing || pinch) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
     e.preventDefault();
     try { ink.setPointerCapture(e.pointerId); } catch (err) {}
@@ -900,7 +901,7 @@ footer {
   ink.addEventListener("contextmenu", function (e) { if (tool !== "move") e.preventDefault(); });
 
   /* ---------- pinch to zoom with two fingers, in any drawing tool ---------- */
-  var touchPts = new Map(), pinch = null, blockDraw = false;
+  var pinch = null;
   function cancelStroke() {
     cancelHold();
     if (!drawing) return;
@@ -909,58 +910,56 @@ footer {
     snap = null; working = null;
     renderInk();
   }
-  function pinchInfo() {
-    var p = Array.from(touchPts.values());
-    return { d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1, x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 };
+  function twoFingers(e) {
+    var a = e.touches[0], b = e.touches[1];
+    return { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) || 1, x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 };
   }
-  function startPinch() {
-    cancelStroke();
-    var info = pinchInfo(), r = sheet.getBoundingClientRect();
-    pinch = { z0: zoom, d0: info.d, x0: info.x, y0: info.y, px: info.x - r.left, py: info.y - r.top, s: 1, x: info.x, y: info.y };
-    sheet.style.transformOrigin = pinch.px + "px " + pinch.py + "px";
-  }
-  function movePinch() {
-    var info = pinchInfo();
-    var z = Math.max(0.6, Math.min(4, pinch.z0 * info.d / pinch.d0));
-    pinch.s = z / pinch.z0; pinch.x = info.x; pinch.y = info.y;
-    sheet.style.transform = "translate(" + (info.x - pinch.x0) + "px," + (info.y - pinch.y0) + "px) scale(" + pinch.s + ")";
-  }
-  function endPinch() {
+  stage.addEventListener("touchstart", function (e) {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      cancelStroke();   // the first finger may have started a line: drop it
+      var f = twoFingers(e), r = sheet.getBoundingClientRect();
+      pinch = { z0: zoom, d0: f.d, x0: f.x, y0: f.y, px: f.x - r.left, py: f.y - r.top, s: 1, x: f.x, y: f.y };
+      sheet.style.transformOrigin = pinch.px + "px " + pinch.py + "px";
+    } else if (pinch) e.preventDefault();
+  }, { passive: false });
+  stage.addEventListener("touchmove", function (e) {
+    if (!pinch) return;
+    e.preventDefault();
+    if (e.touches.length < 2) return;
+    var f = twoFingers(e);
+    var z = Math.max(1, Math.min(4, pinch.z0 * f.d / pinch.d0));
+    pinch.s = z / pinch.z0; pinch.x = f.x; pinch.y = f.y;
+    sheet.style.transform = "translate(" + (f.x - pinch.x0) + "px," + (f.y - pinch.y0) + "px) scale(" + pinch.s + ")";
+  }, { passive: false });
+  function endPinch(e) {
+    if (!pinch || e.touches.length >= 2) return;
     var p = pinch; pinch = null;
     sheet.style.transform = ""; sheet.style.transformOrigin = "";
-    if (!p) return;
     setZoom(p.z0 * p.s);
     // keep the point that was between your fingers under your fingers
     var r = sheet.getBoundingClientRect();
     stage.scrollLeft += (r.left + p.px * p.s) - p.x;
     stage.scrollTop += (r.top + p.py * p.s) - p.y;
   }
-  sheet.addEventListener("pointerdown", function (e) {
-    if (e.pointerType !== "touch" || tool === "move") return;
-    touchPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    try { ink.setPointerCapture(e.pointerId); } catch (err) {}
-    if (touchPts.size === 2) { e.stopPropagation(); startPinch(); }
-    else if (touchPts.size > 2 || blockDraw) e.stopPropagation();
-  }, true);
-  sheet.addEventListener("pointermove", function (e) {
-    if (e.pointerType !== "touch" || !touchPts.has(e.pointerId)) return;
-    touchPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pinch) { e.stopPropagation(); if (touchPts.size >= 2) movePinch(); }
-    else if (blockDraw) e.stopPropagation();
-  }, true);
-  function liftTouch(e) {
-    if (e.pointerType !== "touch" || !touchPts.has(e.pointerId)) return;
-    touchPts.delete(e.pointerId);
-    if (pinch) {
-      e.stopPropagation();
-      if (touchPts.size < 2) { endPinch(); blockDraw = touchPts.size > 0; }   // the finger left behind must not start drawing
-    } else if (blockDraw) {
-      e.stopPropagation();
-      if (!touchPts.size) blockDraw = false;
-    }
-  }
-  sheet.addEventListener("pointerup", liftTouch, true);
-  sheet.addEventListener("pointercancel", liftTouch, true);
+  stage.addEventListener("touchend", endPinch);
+  stage.addEventListener("touchcancel", endPinch);
+  document.addEventListener("gesturestart", function (e) { e.preventDefault(); });   // older iPhones
+
+  // double-tap the grey area to fit the page again
+  var lastTap = 0;
+  stage.addEventListener("touchend", function (e) {
+    if (e.touches.length || e.changedTouches.length !== 1 || onPage(e.target)) return;
+    var now = Date.now();
+    if (now - lastTap < 320) { setZoom(1); stage.scrollTo(0, 0); lastTap = 0; } else lastTap = now;
+  });
+  stage.addEventListener("dblclick", function (e) { if (!onPage(e.target)) { setZoom(1); stage.scrollTo(0, 0); } });
+  // trackpad pinch / Ctrl + mouse wheel on a computer zooms the page, not the app
+  stage.addEventListener("wheel", function (e) {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    setZoom(zoom * Math.exp(-e.deltaY / 200));
+  }, { passive: false });
 
   /* ---------- bottom bar ---------- */
   var ICONS = {
@@ -1171,7 +1170,7 @@ footer {
     msg.textContent = "Moved " + n + " highlight" + (n === 1 ? "" : "s") + " onto their lines. Their dates are unchanged.";
   });
 
-  function setZoom(z) { zoom = Math.max(0.6, Math.min(4, z)); $("#zoomLabel").textContent = Math.round(zoom * 100) + "%"; layout(); }
+  function setZoom(z) { zoom = Math.max(1, Math.min(4, z)); $("#zoomLabel").textContent = Math.round(zoom * 100) + "%"; layout(); }
   $("#zin").addEventListener("click", function () { setZoom(zoom * 1.25); });
   $("#zout").addEventListener("click", function () { setZoom(zoom / 1.25); });
   $("#zfit").addEventListener("click", function () { setZoom(1); });

@@ -287,6 +287,10 @@ footer {
       <label class="sl"><span>Highlighter size</span><input id="hlSize" type="range" min="1" max="12" value="6"><b id="hlLabel">6</b></label>
       <label class="sl"><span>Pen size</span><input id="penSize" type="range" min="1" max="12" value="3"><b id="penLabel">3</b></label>
       <label class="check"><input type="checkbox" id="straight" checked> Straight highlights along the line</label>
+      <label class="check"><input type="checkbox" id="snapLines" checked> Snap straight highlights onto the nearest line</label>
+      <label class="check"><input type="checkbox" id="fitLine" checked> Make snapped highlights the height of the line</label>
+      <div class="row"><button id="tidyBtn">Snap my existing highlights onto their lines</button></div>
+      <p class="note" id="tidyMsg" role="status"></p>
     </section>
 
     <section>
@@ -319,6 +323,7 @@ footer {
         <button id="bkSave" class="primary">Save backup file</button>
         <button id="bkOpen">Load backup file</button>
       </div>
+      <p class="note" id="bkLock" hidden>Loading a backup replaces notes in your account, so it only works on your main device.</p>
       <p>Or copy and paste notes as text:</p>
       <textarea id="bk" spellcheck="false" placeholder="Paste a backup here"></textarea>
       <div class="row">
@@ -375,6 +380,7 @@ footer {
       <div id="statList"></div>
       <p>Per page is the score divided by the surah’s length in pages, so long and short surahs can be compared fairly. Surahs shorter than a page are marked “short”, because a single mistake moves them a lot. Tap a surah to open it.</p>
       <p>Erasing a highlight within 20 minutes removes it completely, as a quick correction. Erasing it later keeps it in these stats as a fixed mistake.</p>
+      <p>Highlighting over an existing highlight marks the same mistake again, so they count as one “repeated” mistake. It counts in Last 30 days or Last 7 days if you re-marked it then, and it is worth the highest colour value among its highlights.</p>
     </section>
 
     <section>
@@ -398,6 +404,7 @@ footer {
     <section>
       <h3>Fixed mistake history</h3>
       <p>Highlights you erased more than 20 minutes after making them, grouped by the day you erased them. If you erased highlights only to redo them in another colour, remove that day here.</p>
+      <p class="note" id="fixedLock" hidden>Removing history only works on your main device.</p>
       <div id="fixedDays" style="display:flex;flex-direction:column;gap:8px"></div>
     </section>
   </div>
@@ -438,8 +445,23 @@ footer {
         <p class="err" id="aOutErr" role="alert"></p>
       </section>
       <section>
+        <h3>Main device</h3>
+        <p id="mainState"></p>
+        <div class="row" id="claimRow" hidden><button id="claimBtn" class="primary">Make this the main device</button></div>
+        <div id="handRow" hidden>
+          <div class="row"><button id="handBtn">Hand over to another device</button></div>
+          <p class="note" id="handCode"></p>
+        </div>
+        <div id="takeRow" hidden>
+          <label class="field">Got a new main device? Enter the code shown on your current main device<input id="takeCode" inputmode="numeric" maxlength="6" autocomplete="off"></label>
+          <div class="row"><button id="takeBtn">Make this the main device</button></div>
+        </div>
+        <p class="err" id="mainErr" role="alert"></p>
+        <p>Device ID: <span id="devId"></span></p>
+      </section>
+      <section>
         <div class="row"><button id="aDelete">Delete account</button></div>
-        <p>Permanently deletes your account and all the notes in it.</p>
+        <p>Permanently deletes your account and all the notes in it. Only your main device can do this.</p>
       </section>
     </div>
     <p id="acctOff" hidden>Accounts are not set up for this app yet.</p>
@@ -488,6 +510,7 @@ footer {
   var sizes = { pen: 3, hl: 6 };
   var barColors = ["#f5c400", "#2fb36a", "#ee5a9b", "#3a86e8", "#e23b3b"];
   var weights = {}, statPeriod = 0, statSort = "rate", groupJ30 = false, showZero = false;
+  var snapLines = true, fitLine = true;
   var ann = {}, hist = [], redoStack = [];
   var cur = null, snap = null, changed = false, drawing = false;
   var showId = 0;
@@ -529,11 +552,13 @@ footer {
       if (p.statSort) statSort = p.statSort;
       if (typeof p.groupJ30 === "boolean") groupJ30 = p.groupJ30;
       if (typeof p.showZero === "boolean") showZero = p.showZero;
+      if (typeof p.snapLines === "boolean") snapLines = p.snapLines;
+      if (typeof p.fitLine === "boolean") fitLine = p.fitLine;
     } catch (e) {}
   })();
   tool = mainTool;
   function savePrefs(fromCloud) {
-    lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, mainTool: mainTool, barColors: barColors, weights: weights, statPeriod: statPeriod, statSort: statSort, groupJ30: groupJ30, showZero: showZero }));
+    lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, mainTool: mainTool, barColors: barColors, weights: weights, statPeriod: statPeriod, statSort: statSort, groupJ30: groupJ30, showZero: showZero, snapLines: snapLines, fitLine: fitLine }));
     // settings that follow you between devices
     var shared = JSON.stringify(sharedPrefs());
     if (shared !== lastShared) {
@@ -543,7 +568,7 @@ footer {
   }
   var LS_PREFS_T = "mushaf-notes:v2:prefsTime";
   var prefsT = parseInt(lsGet(LS_PREFS_T), 10) || 0;
-  function sharedPrefs() { return { opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, barColors: barColors, weights: weights, groupJ30: groupJ30, showZero: showZero, statSort: statSort }; }
+  function sharedPrefs() { return { opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, barColors: barColors, weights: weights, groupJ30: groupJ30, showZero: showZero, statSort: statSort, snapLines: snapLines, fitLine: fitLine }; }
   var lastShared = JSON.stringify(sharedPrefs());
   var saveTimer = null, askedPersist = false;
   function saveLocal() {
@@ -695,6 +720,24 @@ footer {
   var rt = null;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { fitSwatches(); if (idx) layout(); }, 150); });
 
+  /* ---------- lines on the page ---------- */
+  // Every Quran page of this scan has 15 evenly spaced lines in one of two layouts (by image height).
+  // The text sits slightly below the middle of each line slot.
+  var LINE_LAYOUTS = { 1072: { top: 134, bot: 938 }, 1176: { top: 186, bot: 990 } };
+  var LINE_NUDGE = 0.056;
+  function pageImageHeight(i) { return i <= 64 ? 1176 : 1072; }
+  function lineSnap(i, y, imgH) {
+    var m = i - OFFSET;
+    if (m < 3 || m > MUSHAF_PAGES) return null;            // decorated first pages and extra pages: no snapping
+    var h = imgH || pageImageHeight(i), lay = LINE_LAYOUTS[h];
+    if (!lay) return null;
+    var L = (lay.bot - lay.top) / 15, py = y * h;
+    if (py < lay.top - L / 2 || py > lay.bot + L / 2) return null;   // well outside the text
+    var k = Math.max(0, Math.min(14, Math.floor((py - lay.top) / L)));
+    return { y: Math.round((lay.top + (k + 0.5 + LINE_NUDGE) * L) / h * 10000) / 10000, w: Math.round(L * 0.92 / 750 * 10000) / 10000 };
+  }
+  function snapOn() { return snapLines && straight; }
+
   /* ---------- drawing ---------- */
   function drawStroke(ctx, s) {
     var p = s.p;
@@ -792,13 +835,17 @@ footer {
     e.preventDefault();
     try { ink.setPointerCapture(e.pointerId); } catch (err) {}
     drawing = true; changed = false;
-    snap = { i: idx, before: strokes(idx).slice() };
+    snap = { i: idx, before: strokes(idx).slice(), entry: ann[idx] };
     working = strokes(idx).slice();
     var q = pt(e);
     if (tool === "erase") { eraseAt(q); return; }
     if (tool === "recolour") { recolourAt(q); return; }
     var hl = tool === "highlight";
     cur = { k: hl ? "hl" : "pen", c: color, a: opacity / 100, w: hl ? sizes.hl * 0.01 : sizes.pen * 0.002, p: [q[0], q[1]], d: Date.now() };
+    if (hl && snapOn()) {
+      var sn = lineSnap(idx, q[1], img.naturalHeight);
+      if (sn) { cur.p[1] = sn.y; if (fitLine) cur.w = sn.w; cur.snapped = true; }
+    }
     holdDone = false; cancelHold();
     if (hl) hold = { x: e.clientX, y: e.clientY, timer: setTimeout(function () { holdRecolour(q); }, LONG_PRESS) };
     renderInk();
@@ -816,7 +863,9 @@ footer {
       if (tool === "recolour") { recolourAt(q); continue; }
       if (!cur) continue;
       if (cur.k === "hl" && (straight || e.shiftKey)) {
-        cur.p = [cur.p[0], cur.p[1], q[0], cur.p[1]];
+        var ly = cur.p[1];
+        if (cur.snapped) { var sn2 = lineSnap(idx, q[1], img.naturalHeight); if (sn2) ly = sn2.y; }   // follow the finger to another line
+        cur.p = [cur.p[0], ly, q[0], ly];
       } else {
         var lx = cur.p[cur.p.length - 2], ly = cur.p[cur.p.length - 1];
         if (Math.hypot((q[0] - lx) * cssW, (q[1] - ly) * cssH) > 1.2) cur.p.push(q[0], q[1]);
@@ -831,7 +880,7 @@ footer {
     holdDone = false;
     if (cur) {
       var ok = cur.k === "hl" ? (cur.p.length >= 4 && Math.abs(cur.p[cur.p.length - 2] - cur.p[0]) > 0.004) : true;
-      if (ok) { working.push(cur); changed = true; }
+      if (ok) { delete cur.snapped; working.push(cur); changed = true; }
       cur = null;
     }
     if (changed && snap) {
@@ -849,6 +898,69 @@ footer {
   ink.addEventListener("pointerup", endStroke);
   ink.addEventListener("pointercancel", endStroke);
   ink.addEventListener("contextmenu", function (e) { if (tool !== "move") e.preventDefault(); });
+
+  /* ---------- pinch to zoom with two fingers, in any drawing tool ---------- */
+  var touchPts = new Map(), pinch = null, blockDraw = false;
+  function cancelStroke() {
+    cancelHold();
+    if (!drawing) return;
+    drawing = false; cur = null; changed = false; holdDone = false;
+    if (snap) { if (snap.entry) ann[snap.i] = snap.entry; else delete ann[snap.i]; }
+    snap = null; working = null;
+    renderInk();
+  }
+  function pinchInfo() {
+    var p = Array.from(touchPts.values());
+    return { d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) || 1, x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2 };
+  }
+  function startPinch() {
+    cancelStroke();
+    var info = pinchInfo(), r = sheet.getBoundingClientRect();
+    pinch = { z0: zoom, d0: info.d, x0: info.x, y0: info.y, px: info.x - r.left, py: info.y - r.top, s: 1, x: info.x, y: info.y };
+    sheet.style.transformOrigin = pinch.px + "px " + pinch.py + "px";
+  }
+  function movePinch() {
+    var info = pinchInfo();
+    var z = Math.max(0.6, Math.min(4, pinch.z0 * info.d / pinch.d0));
+    pinch.s = z / pinch.z0; pinch.x = info.x; pinch.y = info.y;
+    sheet.style.transform = "translate(" + (info.x - pinch.x0) + "px," + (info.y - pinch.y0) + "px) scale(" + pinch.s + ")";
+  }
+  function endPinch() {
+    var p = pinch; pinch = null;
+    sheet.style.transform = ""; sheet.style.transformOrigin = "";
+    if (!p) return;
+    setZoom(p.z0 * p.s);
+    // keep the point that was between your fingers under your fingers
+    var r = sheet.getBoundingClientRect();
+    stage.scrollLeft += (r.left + p.px * p.s) - p.x;
+    stage.scrollTop += (r.top + p.py * p.s) - p.y;
+  }
+  sheet.addEventListener("pointerdown", function (e) {
+    if (e.pointerType !== "touch" || tool === "move") return;
+    touchPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try { ink.setPointerCapture(e.pointerId); } catch (err) {}
+    if (touchPts.size === 2) { e.stopPropagation(); startPinch(); }
+    else if (touchPts.size > 2 || blockDraw) e.stopPropagation();
+  }, true);
+  sheet.addEventListener("pointermove", function (e) {
+    if (e.pointerType !== "touch" || !touchPts.has(e.pointerId)) return;
+    touchPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch) { e.stopPropagation(); if (touchPts.size >= 2) movePinch(); }
+    else if (blockDraw) e.stopPropagation();
+  }, true);
+  function liftTouch(e) {
+    if (e.pointerType !== "touch" || !touchPts.has(e.pointerId)) return;
+    touchPts.delete(e.pointerId);
+    if (pinch) {
+      e.stopPropagation();
+      if (touchPts.size < 2) { endPinch(); blockDraw = touchPts.size > 0; }   // the finger left behind must not start drawing
+    } else if (blockDraw) {
+      e.stopPropagation();
+      if (!touchPts.size) blockDraw = false;
+    }
+  }
+  sheet.addEventListener("pointerup", liftTouch, true);
+  sheet.addEventListener("pointercancel", liftTouch, true);
 
   /* ---------- bottom bar ---------- */
   var ICONS = {
@@ -959,7 +1071,7 @@ footer {
     var where = p.inBook ? "Page " + p.m + " · " + SURAHS[p.surah][0] + " · Juz " + (p.juz + 1) : (p.m < 1 ? "Front pages" : "Back pages");
     $("#where").textContent = where;
     $("#bk").value = ""; $("#bkMsg").textContent = "";
-    showLastBackup(); refreshOffline(); syncMenu();
+    showLastBackup(); refreshOffline(); syncMenu(); updateLocks();
     menu.classList.add("open");
     menu.scrollTop = 0;
   }
@@ -988,6 +1100,8 @@ footer {
     $("#hlSize").value = sizes.hl; $("#hlLabel").textContent = sizes.hl;
     $("#penSize").value = sizes.pen; $("#penLabel").textContent = sizes.pen;
     $("#straight").checked = straight;
+    $("#snapLines").checked = snapLines; $("#fitLine").checked = fitLine;
+    $("#snapLines").disabled = !straight; $("#fitLine").disabled = !straight || !snapLines;
     $("#swapTurn").checked = swapTurn;
     $("#zoomLabel").textContent = Math.round(zoom * 100) + "%";
     buildPalette();
@@ -999,7 +1113,9 @@ footer {
   $("#hlSize").addEventListener("input", function (e) { sizes.hl = +e.target.value; $("#hlLabel").textContent = sizes.hl; });
   $("#penSize").addEventListener("input", function (e) { sizes.pen = +e.target.value; $("#penLabel").textContent = sizes.pen; });
   ["#opacity", "#hlSize", "#penSize"].forEach(function (s) { $(s).addEventListener("change", savePrefs); });
-  $("#straight").addEventListener("change", function (e) { straight = e.target.checked; savePrefs(); });
+  $("#straight").addEventListener("change", function (e) { straight = e.target.checked; savePrefs(); syncMenu(); });
+  $("#snapLines").addEventListener("change", function (e) { snapLines = e.target.checked; savePrefs(); syncMenu(); });
+  $("#fitLine").addEventListener("change", function (e) { fitLine = e.target.checked; savePrefs(); });
   $("#swapTurn").addEventListener("change", function (e) { swapTurn = e.target.checked; savePrefs(); updateTurns(); });
 
   function buildPalette() {
@@ -1022,6 +1138,38 @@ footer {
       box.appendChild(b);
     });
   }
+
+  var tidyTimer = null;
+  $("#tidyBtn").addEventListener("click", function () {
+    var btn = $("#tidyBtn"), msg = $("#tidyMsg");
+    var plan = [];
+    Object.keys(ann).forEach(function (k) {
+      var i = +k, list = strokes(i), moved = 0;
+      var next = list.map(function (st) {
+        if (st.k !== "hl" || st.p.length !== 4 || Math.abs(st.p[1] - st.p[3]) > 0.0005) return st;   // straight highlights only
+        var sn = lineSnap(i, st.p[1]);
+        if (!sn) return st;
+        var w = fitLine ? sn.w : st.w;
+        if (Math.abs(sn.y - st.p[1]) < 0.0005 && w === st.w) return st;
+        var copy = {}; Object.keys(st).forEach(function (q) { copy[q] = st[q]; });
+        copy.p = [st.p[0], sn.y, st.p[2], sn.y]; copy.w = w; moved++;
+        return copy;
+      });
+      if (moved) plan.push([i, next, moved]);
+    });
+    var n = plan.reduce(function (a, x) { return a + x[2]; }, 0);
+    if (!n) { msg.textContent = "Your highlights are already on their lines."; return; }
+    if (!tidyTimer) {
+      btn.textContent = "Tap again to move " + n + " highlight" + (n === 1 ? "" : "s");
+      tidyTimer = setTimeout(function () { btn.textContent = "Snap my existing highlights onto their lines"; tidyTimer = null; }, 4000);
+      return;
+    }
+    clearTimeout(tidyTimer); tidyTimer = null; btn.textContent = "Snap my existing highlights onto their lines";
+    plan.forEach(function (x) { setStrokes(x[0], x[1]); });
+    hist = []; redoStack = []; updateUndoRedo();
+    renderInk();
+    msg.textContent = "Moved " + n + " highlight" + (n === 1 ? "" : "s") + " onto their lines. Their dates are unchanged.";
+  });
 
   function setZoom(z) { zoom = Math.max(0.6, Math.min(4, z)); $("#zoomLabel").textContent = Math.round(zoom * 100) + "%"; layout(); }
   $("#zin").addEventListener("click", function () { setZoom(zoom * 1.25); });
@@ -1070,21 +1218,54 @@ footer {
   function fmtW(v) { return String(Math.round(v * 10) / 10); }
   function colourName(c) { var f = PALETTE.filter(function (p) { return p[0] === c; })[0]; return f ? f[1] : "Other colour"; }
 
+  // Highlights that overlap mark the same mistake, so they count once.
+  var PAGE_ASPECT = 0.68;   // page width / height, to turn highlight thickness into a height on the page
+  function hlBox(st) {
+    var x0 = 1, x1 = 0, y0 = 1, y1 = 0;
+    for (var i = 0; i < st.p.length; i += 2) {
+      x0 = Math.min(x0, st.p[i]); x1 = Math.max(x1, st.p[i]);
+      y0 = Math.min(y0, st.p[i + 1]); y1 = Math.max(y1, st.p[i + 1]);
+    }
+    var hy = st.w / 2 * PAGE_ASPECT;
+    return { x0: x0, x1: x1, y0: y0 - hy, y1: y1 + hy };
+  }
+  function sameMistake(a, b) {
+    var ox = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0), oy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
+    if (ox <= 0 || oy <= 0) return false;
+    // they must really cover the same words: a fair share across, and mostly the same line
+    return ox >= 0.3 * Math.min(a.x1 - a.x0, b.x1 - b.x0) && oy >= 0.5 * Math.min(a.y1 - a.y0, b.y1 - b.y0);
+  }
+  function groupHighlights(list) {
+    var boxes = list.map(hlBox), parent = list.map(function (_, i) { return i; });
+    function root(i) { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; }
+    for (var i = 0; i < list.length; i++)
+      for (var j = i + 1; j < list.length; j++)
+        if (sameMistake(boxes[i], boxes[j])) parent[root(i)] = root(j);
+    var groups = {};
+    list.forEach(function (st, i) { var r = root(i); (groups[r] = groups[r] || []).push(st); });
+    return Object.keys(groups).map(function (k) { return groups[k]; });
+  }
+
   function computeStats() {
     var since = statPeriod ? Date.now() - statPeriod * 86400000 : 0;
-    var score = new Array(114).fill(0), count = new Array(114).fill(0), fixed = new Array(114).fill(0), undated = 0, used = {};
+    var score = new Array(114).fill(0), count = new Array(114).fill(0), fixed = new Array(114).fill(0), repeated = new Array(114).fill(0), undated = 0, used = {};
     var byCol = []; for (var z = 0; z < 114; z++) byCol.push({});
     Object.keys(ann).forEach(function (k) {
       var m = +k - OFFSET;
       if (m < 1 || m > MUSHAF_PAGES) return;
-      strokes(+k).forEach(function (st) {
-        if (st.k !== "hl") return;
-        used[st.c] = (used[st.c] || 0) + 1;
-        if (since) { if (!st.d) { undated++; return; } if (st.d < since) return; }
-        var s = surahAt(m, strokeY(st));
+      var hls = strokes(+k).filter(function (st) { return st.k === "hl"; });
+      hls.forEach(function (st) { used[st.c] = (used[st.c] || 0) + 1; });
+      groupHighlights(hls).forEach(function (g) {
+        // one mistake: it counts in a period if it was marked (or re-marked) then,
+        // and is worth the highest colour value among its highlights
+        var latest = 0; g.forEach(function (st) { latest = Math.max(latest, st.d || 0); });
+        if (since) { if (!latest) { undated++; return; } if (latest < since) return; }
+        var best = g[0]; g.forEach(function (st) { if (weightOf(st.c) > weightOf(best.c)) best = st; });
+        var s = surahAt(m, strokeY(g[0]));
         count[s]++;
-        score[s] += weightOf(st.c);
-        byCol[s][st.c] = (byCol[s][st.c] || 0) + weightOf(st.c);
+        if (g.length > 1) repeated[s]++;
+        score[s] += weightOf(best.c);
+        byCol[s][best.c] = (byCol[s][best.c] || 0) + weightOf(best.c);
       });
     });
     fixedLog.forEach(function (x) {
@@ -1097,7 +1278,7 @@ footer {
       score[s] += weightOf(x.c);
       byCol[s][x.c] = (byCol[s][x.c] || 0) + weightOf(x.c);
     });
-    return { score: score, count: count, fixed: fixed, byCol: byCol, undated: undated, used: used };
+    return { score: score, count: count, fixed: fixed, repeated: repeated, byCol: byCol, undated: undated, used: used };
   }
   function fmt(x) { return x >= 10 ? x.toFixed(1) : x.toFixed(2); }
 
@@ -1110,12 +1291,12 @@ footer {
     var rows = [];
     for (var s = 0; s < 114; s++) {
       if (groupJ30 && s >= 77) continue;
-      rows.push({ name: (s + 1) + ". " + SURAHS[s][0], score: r.score[s], count: r.count[s], fixed: r.fixed[s], byCol: r.byCol[s], len: SURAH_LEN[s], page: SURAHS[s][1], order: s });
+      rows.push({ name: (s + 1) + ". " + SURAHS[s][0], score: r.score[s], count: r.count[s], fixed: r.fixed[s], repeated: r.repeated[s], byCol: r.byCol[s], len: SURAH_LEN[s], page: SURAHS[s][1], order: s });
     }
     if (groupJ30) {
-      var g = { name: "Juz 30 (An-Naba to An-Nas)", score: 0, count: 0, fixed: 0, byCol: {}, len: 0, page: SURAHS[77][1], order: 77 };
+      var g = { name: "Juz 30 (An-Naba to An-Nas)", score: 0, count: 0, fixed: 0, repeated: 0, byCol: {}, len: 0, page: SURAHS[77][1], order: 77 };
       for (var j = 77; j < 114; j++) {
-        g.score += r.score[j]; g.count += r.count[j]; g.fixed += r.fixed[j]; g.len += SURAH_LEN[j];
+        g.score += r.score[j]; g.count += r.count[j]; g.fixed += r.fixed[j]; g.repeated += r.repeated[j]; g.len += SURAH_LEN[j];
         Object.keys(r.byCol[j]).forEach(function (c) { g.byCol[c] = (g.byCol[c] || 0) + r.byCol[j][c]; });
       }
       rows.push(g);
@@ -1172,7 +1353,10 @@ footer {
         seg.title = colourName(c) + ": " + (Math.round(x.byCol[c] * 10) / 10);
         fill.appendChild(seg);
       });
-      b.querySelector(".meta").textContent = x.count + " mistake" + (x.count === 1 ? "" : "s") + (x.fixed ? " (" + x.fixed + " fixed)" : "") + " · " + (x.len < 1 ? x.len.toFixed(2) : x.len.toFixed(1)) + " pages";
+      var extra = [];
+      if (x.repeated) extra.push(x.repeated + " repeated");
+      if (x.fixed) extra.push(x.fixed + " fixed");
+      b.querySelector(".meta").textContent = x.count + " mistake" + (x.count === 1 ? "" : "s") + (extra.length ? " (" + extra.join(", ") + ")" : "") + " · " + (x.len < 1 ? x.len.toFixed(2) : x.len.toFixed(1)) + " pages";
       b.setAttribute("aria-label", x.name + ", score " + (Math.round(x.score * 10) / 10) + ", " + fmt(x.rate) + " per page");
       b.addEventListener("click", function () { closeStats(); closeMenu(); show(x.page + OFFSET); });
       list.appendChild(b);
@@ -1191,7 +1375,7 @@ footer {
       row.innerHTML = '<span class="grip"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><g fill="currentColor"><circle cx="5" cy="3" r="1.5"/><circle cx="11" cy="3" r="1.5"/><circle cx="5" cy="8" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="5" cy="13" r="1.5"/><circle cx="11" cy="13" r="1.5"/></g></svg></span><span class="sw"></span><span class="nm"><span class="cn"></span><br><span class="uses"></span></span><button aria-label="Less">−</button><input type="text" inputmode="decimal" autocomplete="off"><button aria-label="More">+</button>';
       row.querySelector(".sw").style.background = c;
       row.querySelector(".cn").textContent = colourName(c);
-      row.querySelector(".uses").textContent = n + " mistake" + (n === 1 ? "" : "s") + " in total" + (onBar ? "" : " · not on the bar");
+      row.querySelector(".uses").textContent = n + " highlight" + (n === 1 ? "" : "s") + " in total" + (onBar ? "" : " · not on the bar");
       var grip = row.querySelector(".grip");
       if (onBar) {
         grip.setAttribute("role", "button"); grip.tabIndex = 0;
@@ -1341,8 +1525,10 @@ footer {
         sp.appendChild(dot); sp.appendChild(document.createTextNode(colourName(c) + " " + d.cols[c])); chips.appendChild(sp);
       });
       var btn = row.querySelector("button"), t = null;
+      if (!isMain()) btn.disabled = true;
       btn.setAttribute("aria-label", "Remove the " + d.n + " fixed mistakes erased on " + d.label);
       btn.addEventListener("click", function () {
+        if (!isMain()) { btn.disabled = true; return; }
         if (!t) { btn.textContent = "Sure?"; t = setTimeout(function () { btn.textContent = "Remove"; t = null; }, 3000); return; }
         clearTimeout(t);
         var touched = {};
@@ -1360,7 +1546,7 @@ footer {
     });
   }
   var statsSheet = $("#stats");
-  function openStats() { renderStats(); statsSheet.classList.add("open"); statsSheet.scrollTop = 0; }
+  function openStats() { renderStats(); updateLocks(); statsSheet.classList.add("open"); statsSheet.scrollTop = 0; }
   function closeStats() { statsSheet.classList.remove("open"); }
   $("#statsTop").addEventListener("click", openStats);
   $("#statsBack").addEventListener("click", closeStats);
@@ -1419,7 +1605,7 @@ footer {
     bkMsg("Backup file saved: " + name);
   });
   var bkFile = $("#bkFile");
-  $("#bkOpen").addEventListener("click", function () { bkFile.click(); });
+  $("#bkOpen").addEventListener("click", function () { if (!mainOnly($("#bkMsg"))) return; bkFile.click(); });
   bkFile.addEventListener("change", async function () {
     var f = bkFile.files && bkFile.files[0];
     bkFile.value = "";
@@ -1433,6 +1619,7 @@ footer {
     catch (e) { t.focus(); t.select(); bkMsg("Text selected. Copy it with your device’s copy command."); }
   });
   $("#bkLoad").addEventListener("click", function () {
+    if (!mainOnly($("#bkMsg"))) return;
     try { var n = importText($("#bk").value); bkMsg("Loaded notes for " + n + " page" + (n === 1 ? "" : "s") + "."); }
     catch (e) { bkMsg("That text is not a valid notes backup."); }
   });
@@ -1516,6 +1703,62 @@ footer {
   var fb = { app: null, au: null, fs: null, auth: null, db: null, user: null, unsub: [], dirty: {}, prefsDirty: false, timer: null, merged: false, pending: false, fromCache: true, failed: false, loading: false, loadFailed: false };
   var LS_PROMPTED = "mushaf-notes:v2:acctPrompted", LS_NAG = "mushaf-notes:v2:nagAt";
   var acct = $("#acct");
+  // each install gets its own ID; the account remembers which one is the main device
+  var LS_DEVICE = "mushaf-notes:v2:deviceId";
+  var deviceId = lsGet(LS_DEVICE);
+  if (!deviceId) {
+    deviceId = Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(6)), function (b) { return ("0" + b.toString(16)).slice(-2); }).join("").replace(/(.{4})(.{4})(.{4})/, "$1-$2-$3");
+    lsSet(LS_DEVICE, deviceId);
+  }
+  fb.owner = undefined;   // undefined: not known yet; null: no main device set
+  function isMain() { return !fb.user || (fb.owner && fb.owner.device === deviceId); }
+  function ownerRef() { return fb.fs.doc(fb.db, "users", fb.user.uid, "meta", "owner"); }
+  function setOwner(data) { var b = fb.fs.writeBatch(fb.db); b.set(ownerRef(), data); return b.commit(); }
+  var LOCK_MSG = "Only your main device can do this. Your main device is the one that created the account.";
+  function mainOnly(el) { if (isMain()) return true; if (el) el.textContent = LOCK_MSG; return false; }
+  function updateLocks() {
+    var locked = !isMain();
+    $("#aDelete").disabled = locked;
+    $("#bkOpen").disabled = locked; $("#bkLoad").disabled = locked;
+    $("#bkLock").hidden = !locked; $("#fixedLock").hidden = !locked;
+    document.querySelectorAll("#fixedDays .drow button").forEach(function (b) { b.disabled = locked; });
+    renderMainState();
+  }
+  function renderMainState() {
+    if (!fb.user) return;
+    var known = fb.owner !== undefined, set = !!(fb.owner && fb.owner.device), me = isMain() && set;
+    $("#devId").textContent = deviceId;
+    $("#mainState").textContent = !known ? "Checking…" :
+      me ? "This is your main device. Only this device can delete the account, remove fixed-mistake history or load a backup. Everything else works on all your devices." :
+      set ? "Another device is your main device. On this device you can read, highlight and fix mistakes, but deleting the account, removing fixed-mistake history and loading backups only work on the main device." :
+      "No main device is set for this account yet. Until one is, no device can delete the account, remove fixed-mistake history or load a backup. Make the device you use most the main device.";
+    $("#claimRow").hidden = !(known && !set);
+    $("#handRow").hidden = !me;
+    $("#takeRow").hidden = !(known && set && !me);
+  }
+  $("#claimBtn").addEventListener("click", function () {
+    $("#mainErr").textContent = "";
+    if (fb.owner && fb.owner.device) return;
+    setOwner({ device: deviceId, since: Date.now() }).catch(function () { $("#mainErr").textContent = "Could not save. Check your connection and try again."; });
+    fb.owner = { device: deviceId, since: Date.now() }; updateLocks();
+  });
+  $("#handBtn").addEventListener("click", function () {
+    $("#mainErr").textContent = "";
+    var code = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
+    var data = { device: deviceId, since: (fb.owner && fb.owner.since) || Date.now(), code: code, codeExp: Date.now() + 10 * 60000 };
+    setOwner(data).catch(function () { $("#mainErr").textContent = "Could not save. Check your connection and try again."; });
+    fb.owner = data;
+    $("#handCode").textContent = "On the new device, open Menu → Account and enter " + code + ". The code works for 10 minutes. This device stops being the main device once it is used.";
+  });
+  $("#takeBtn").addEventListener("click", function () {
+    var err = $("#mainErr"), code = $("#takeCode").value.trim();
+    err.textContent = "";
+    if (!fb.owner || !fb.owner.code || fb.owner.code !== code) { err.textContent = "That code is not right. Tap Hand over on your main device to get a new one."; return; }
+    if (Date.now() > (fb.owner.codeExp || 0)) { err.textContent = "That code has expired. Tap Hand over on your main device to get a new one."; return; }
+    var data = { device: deviceId, since: Date.now() };
+    setOwner(data).catch(function () { err.textContent = "Could not save. Check your connection and try again."; });
+    fb.owner = data; $("#takeCode").value = ""; updateLocks();
+  });
   function fbConfigured() { var c = window.FIREBASE_CONFIG; return !!(c && c.apiKey && c.projectId && c.appId); }
 
   function cloudPage(i) {
@@ -1550,6 +1793,13 @@ footer {
   function startSync(u) {
     var F = fb.fs;
     fb.merged = false;
+    fb.owner = undefined;
+    fb.unsub.push(F.onSnapshot(F.doc(fb.db, "users", u.uid, "meta", "owner"), function (d) {
+      if (d.metadata.fromCache && !d.exists()) return;   // wait for the server before deciding nobody owns it
+      fb.owner = d.exists() ? d.data() : null;
+      if (fb.owner === null && fb.justCreated) { fb.justCreated = false; fb.owner = { device: deviceId, since: Date.now() }; setOwner(fb.owner).catch(function () {}); }
+      updateLocks();
+    }, function () {}));
     fb.unsub.push(F.onSnapshot(F.collection(fb.db, "users", u.uid, "pages"), { includeMetadataChanges: true }, function (qs) {
       fb.pending = qs.metadata.hasPendingWrites;
       fb.fromCache = qs.metadata.fromCache;
@@ -1604,6 +1854,8 @@ footer {
     if (typeof p.opacity === "number") opacity = p.opacity;
     if (p.sizes && typeof p.sizes === "object") sizes = p.sizes;
     if (typeof p.straight === "boolean") straight = p.straight;
+    if (typeof p.snapLines === "boolean") snapLines = p.snapLines;
+    if (typeof p.fitLine === "boolean") fitLine = p.fitLine;
     if (typeof p.swapTurn === "boolean") swapTurn = p.swapTurn;
     if (Array.isArray(p.barColors) && p.barColors.length) barColors = p.barColors;
     if (p.weights && typeof p.weights === "object") weights = p.weights;
@@ -1659,8 +1911,8 @@ footer {
     $("#skipRow").hidden = !first;
     $("#acctSub").textContent = on ? "You are signed in" : "Back up your notes and use them on all your devices";
     if (on) $("#aWho").textContent = fb.user.email || "your account";
-    $("#aErr").textContent = ""; $("#aOutErr").textContent = "";
-    updateSyncUI();
+    $("#aErr").textContent = ""; $("#aOutErr").textContent = ""; $("#mainErr").textContent = ""; $("#handCode").textContent = "";
+    updateSyncUI(); updateLocks();
     acct.classList.add("open"); acct.scrollTop = 0;
   }
   function closeAcct() { acct.classList.remove("open"); }
@@ -1718,7 +1970,7 @@ footer {
   $("#aCreate").addEventListener("click", function () {
     var c = creds();
     if (!c[0] || !c[1]) { $("#aErr").textContent = "Enter an email and choose a password of at least 6 characters."; return; }
-    runAuth(this, function () { return fb.au.createUserWithEmailAndPassword(fb.auth, c[0], c[1]); });
+    runAuth(this, function () { fb.justCreated = true; return fb.au.createUserWithEmailAndPassword(fb.auth, c[0], c[1]).catch(function (e) { fb.justCreated = false; throw e; }); });
   });
   $("#aForgot").addEventListener("click", function () {
     var e = creds()[0];
@@ -1729,7 +1981,13 @@ footer {
       .catch(function (err) { $("#aErr").textContent = authMsg(err); });
   });
   $("#gBtn").addEventListener("click", function () {
-    runAuth(this, function () { return fb.au.signInWithPopup(fb.auth, new fb.au.GoogleAuthProvider()); });
+    runAuth(this, function () {
+      return fb.au.signInWithPopup(fb.auth, new fb.au.GoogleAuthProvider()).then(function (res) {
+        var m = res && res.user && res.user.metadata;
+        if (m && m.creationTime && m.lastSignInTime && m.creationTime === m.lastSignInTime) fb.justCreated = true;
+        return res;
+      });
+    });
   });
 
   function wipeLocal() {
@@ -1764,6 +2022,7 @@ footer {
   var delTimer = null;
   $("#aDelete").addEventListener("click", async function () {
     var btn = this, msg = $("#aOutErr");
+    if (!mainOnly(msg)) return;
     if (!delTimer) { btn.textContent = "Tap again to delete everything"; delTimer = setTimeout(function () { btn.textContent = "Delete account"; delTimer = null; }, 4000); return; }
     clearTimeout(delTimer); delTimer = null;
     btn.disabled = true; btn.textContent = "Deleting…"; msg.textContent = "";
@@ -1771,7 +2030,7 @@ footer {
     try {
       stopSync();
       var snap = await F.getDocs(F.collection(fb.db, "users", u.uid, "pages"));
-      var refs = snap.docs.map(function (d) { return d.ref; }).concat([F.doc(fb.db, "users", u.uid, "meta", "prefs")]);
+      var refs = snap.docs.map(function (d) { return d.ref; }).concat([F.doc(fb.db, "users", u.uid, "meta", "prefs"), F.doc(fb.db, "users", u.uid, "meta", "owner")]);
       for (var a = 0; a < refs.length; a += 400) {
         var batch = F.writeBatch(fb.db);
         refs.slice(a, a + 400).forEach(function (r) { batch.delete(r); });
@@ -1789,7 +2048,9 @@ footer {
   function onUser(u) {
     stopSync();
     fb.user = u || null; fb.failed = false; fb.fromCache = true; fb.pending = false; fb.dirty = {}; fb.prefsDirty = false;
+    if (!u) { fb.owner = undefined; fb.justCreated = false; }
     if (u) { lsSet(LS_PROMPTED, "1"); startSync(u); }
+    updateLocks();
     if (acct.classList.contains("open")) openAcct(false);
     updateSyncUI();
     if (!u && fbConfigured() && !lsGet(LS_PROMPTED)) openAcct(true);

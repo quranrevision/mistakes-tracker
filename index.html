@@ -864,9 +864,8 @@ footer {
       if (tool === "recolour") { recolourAt(q); continue; }
       if (!cur) continue;
       if (cur.k === "hl" && (straight || e.shiftKey)) {
-        var ly = cur.p[1];
-        if (cur.snapped) { var sn2 = lineSnap(idx, q[1], img.naturalHeight); if (sn2) ly = sn2.y; }   // follow the finger to another line
-        cur.p = [cur.p[0], ly, q[0], ly];
+        // stays on the line it started on, however far the finger drifts up or down
+        cur.p = [cur.p[0], cur.p[1], q[0], cur.p[1]];
       } else {
         var lx = cur.p[cur.p.length - 2], ly = cur.p[cur.p.length - 1];
         if (Math.hypot((q[0] - lx) * cssW, (q[1] - ly) * cssH) > 1.2) cur.p.push(q[0], q[1]);

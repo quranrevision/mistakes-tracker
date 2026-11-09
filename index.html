@@ -103,6 +103,21 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
   box-shadow: 0 1px 6px var(--shadow);
 }
 
+/* notes */
+#badges { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+.nb { position: absolute; width: 26px; height: 26px; min-height: 0; padding: 0; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: auto; display: flex; align-items: center; justify-content: center; background: #fff; color: #17211c; border: 2px solid #888; box-shadow: 0 1px 5px rgba(0,0,0,.4); }
+.nb.nm { border-style: dashed; color: #5f6b65; }
+.dlg { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45); display: flex; align-items: flex-start; justify-content: center; padding: calc(56px + env(safe-area-inset-top, 0px)) 12px 12px; }
+.dlg .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; width: min(520px, 100%); display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; }
+.dlg textarea { width: 100%; box-sizing: border-box; min-height: 120px; font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); color: var(--ink); resize: vertical; }
+.dlg .nsw { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); flex: none; }
+#toolSeg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+#toolSeg button { border-radius: 8px !important; border-left-width: 1px !important; }
+.search { width: 100%; box-sizing: border-box; font-size: 16px; padding: 9px 10px; min-height: 42px; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); color: var(--ink); }
+.nrow .snip { display: block; margin-top: 4px; font-weight: 400; color: var(--ink); white-space: pre-wrap; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.nrow .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; align-self: center; border: 1px solid var(--line); }
+#notes { z-index: 31; }
+
 /* shown when the drawing tool is Move or Recolour */
 #backHl {
   position: absolute; z-index: 7; left: 50%; transform: translateX(-50%); bottom: 72px;
@@ -271,15 +286,25 @@ footer {
     <section>
       <h3>Drawing tool</h3>
       <p>The first button on the bottom bar uses this tool.</p>
-      <div class="seg" role="group" aria-label="Drawing tool">
+      <div class="seg" id="toolSeg" role="group" aria-label="Drawing tool">
         <button data-main="highlight">Highlighter</button>
         <button data-main="pen">Pen</button>
         <button data-main="move">Move</button>
         <button data-main="recolour">Recolour</button>
+        <button data-main="note">Notes</button>
       </div>
       <p>Tip: with the highlighter, press and hold a highlight to switch it to the colour selected on the bar. Its date is kept, so it still counts as the same mistake.</p>
+      <p id="noteHint" hidden>Notes: tap a highlight to add or edit a note on it. Highlights with notes show a note icon; tap the icon any time, in any tool, to read or edit the note.</p>
       <p id="moveHint" hidden>Move lets you scroll a zoomed page and swipe to turn pages.</p>
       <p id="recolourHint" hidden>Recolour: pick a colour on the bar, then tap or drag over highlights to change them to it. They keep their original date, so they are not counted as new or fixed mistakes. Switch back to Highlighter when you are done.</p>
+    </section>
+
+    <section>
+      <h3>Notes</h3>
+      <p>Choose Notes as the drawing tool, then tap a highlight to write a note on it.</p>
+      <div class="row"><button id="notesBtn">See all my notes</button></div>
+      <label class="check"><input type="checkbox" id="noteSep"> Let notes be separate from mistakes</label>
+      <p>When on, each note gets a “Count as a mistake” switch. A highlight switched off is left out of your stats, so you can use highlights for reminders that are not mistakes. When off, every highlight counts as before.</p>
     </section>
 
     <section>
@@ -381,6 +406,7 @@ footer {
       <div id="statList"></div>
       <p>Per page is the score divided by the surah’s length in pages, so long and short surahs can be compared fairly. Surahs shorter than a page are marked “short”, because a single mistake moves them a lot. Tap a surah to open it.</p>
       <p>Erasing a highlight within 20 minutes removes it completely, as a quick correction. Erasing it later keeps it in these stats as a fixed mistake.</p>
+      <p>The eraser removes only the top highlight when several are stacked on the same mistake. Tap again to remove the next one down. Removing a repeat while an earlier highlight still marks the mistake does not count as fixing it.</p>
       <p>Highlighting over an existing highlight marks the same mistake again, so they count as one “repeated” mistake. It counts in Last 30 days or Last 7 days if you re-marked it then, and it is worth the highest colour value among its highlights.</p>
     </section>
 
@@ -410,6 +436,29 @@ footer {
     </section>
   </div>
 </div>
+<div id="notes" class="sheet" role="dialog" aria-modal="true" aria-labelledby="notesTitle">
+  <div class="top">
+    <h2 id="notesTitle">All notes<span class="where" id="notesCount"></span></h2>
+    <button id="notesBack" class="primary">Close</button>
+  </div>
+  <div class="body">
+    <section>
+      <input id="notesSearch" class="search" type="search" placeholder="Search your notes" aria-label="Search your notes">
+      <div id="notesList" style="display:flex;flex-direction:column;gap:8px"></div>
+    </section>
+  </div>
+</div>
+
+<div id="noteDlg" class="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="ndTitle">
+  <div class="box">
+    <div class="row"><span class="nsw" id="ndSw"></span><b id="ndTitle">Note</b><span class="grow"></span><button id="ndX" aria-label="Close">✕</button></div>
+    <p class="muted" id="ndWhere" style="margin:0"></p>
+    <textarea id="ndText" maxlength="1000" placeholder="Write a note about this highlight" aria-label="Note"></textarea>
+    <label class="check" id="ndMistakeRow"><input type="checkbox" id="ndMistake" checked> Count as a mistake</label>
+    <div class="row"><button id="ndSave" class="primary">Save</button><button id="ndDelete">Delete note</button><span class="grow"></span><button id="ndCancel">Cancel</button></div>
+  </div>
+</div>
+
 <div id="acct" class="sheet" role="dialog" aria-modal="true" aria-labelledby="acctTitle">
   <div class="top">
     <h2 id="acctTitle">Your account<span class="where" id="acctSub">Back up your notes and use them on all your devices</span></h2>
@@ -511,7 +560,7 @@ footer {
   var sizes = { pen: 3, hl: 6 };
   var barColors = ["#f5c400", "#2fb36a", "#ee5a9b", "#3a86e8", "#e23b3b"];
   var weights = {}, statPeriod = 0, statSort = "rate", groupJ30 = false, showZero = false;
-  var snapLines = true, fitLine = true;
+  var snapLines = true, fitLine = true, noteSep = false;
   var ann = {}, hist = [], redoStack = [];
   var cur = null, snap = null, changed = false, drawing = false;
   var showId = 0;
@@ -527,6 +576,7 @@ footer {
     var now = Date.now(), added = 0;
     removed.forEach(function (st) {
       if (!st || st.k !== "hl") return;
+      if (noteSep && st.nm) return;   // a note-only highlight is not a mistake
       if (st.d && now - st.d <= FIX_AFTER) return;   // a quick correction, not a mistake
       var t = 0, n = 0; for (var q = 1; q < st.p.length; q += 2) { t += st.p[q]; n++; }
       fixedLog.push({ i: i, y: n ? Math.round(t / n * 10000) / 10000 : 0, c: st.c, d: st.d || 0, f: now });
@@ -555,11 +605,12 @@ footer {
       if (typeof p.showZero === "boolean") showZero = p.showZero;
       if (typeof p.snapLines === "boolean") snapLines = p.snapLines;
       if (typeof p.fitLine === "boolean") fitLine = p.fitLine;
+      if (typeof p.noteSep === "boolean") noteSep = p.noteSep;
     } catch (e) {}
   })();
   tool = mainTool;
   function savePrefs(fromCloud) {
-    lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, mainTool: mainTool, barColors: barColors, weights: weights, statPeriod: statPeriod, statSort: statSort, groupJ30: groupJ30, showZero: showZero, snapLines: snapLines, fitLine: fitLine }));
+    lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, mainTool: mainTool, barColors: barColors, weights: weights, statPeriod: statPeriod, statSort: statSort, groupJ30: groupJ30, showZero: showZero, snapLines: snapLines, fitLine: fitLine, noteSep: noteSep }));
     // settings that follow you between devices
     var shared = JSON.stringify(sharedPrefs());
     if (shared !== lastShared) {
@@ -569,7 +620,7 @@ footer {
   }
   var LS_PREFS_T = "mushaf-notes:v2:prefsTime";
   var prefsT = parseInt(lsGet(LS_PREFS_T), 10) || 0;
-  function sharedPrefs() { return { opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, barColors: barColors, weights: weights, groupJ30: groupJ30, showZero: showZero, statSort: statSort, snapLines: snapLines, fitLine: fitLine }; }
+  function sharedPrefs() { return { opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, barColors: barColors, weights: weights, groupJ30: groupJ30, showZero: showZero, statSort: statSort, snapLines: snapLines, fitLine: fitLine, noteSep: noteSep }; }
   var lastShared = JSON.stringify(sharedPrefs());
   var saveTimer = null, askedPersist = false;
   function saveLocal() {
@@ -674,6 +725,8 @@ footer {
   document.addEventListener("keydown", function (e) {
     var t = e.target && e.target.tagName;
     if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT") return;
+    if (!$("#noteDlg").hidden) { if (e.key === "Escape") closeNote(); return; }
+    if ($("#notes").classList.contains("open")) { if (e.key === "Escape") $("#notes").classList.remove("open"); return; }
     if (acct.classList.contains("open")) { if (e.key === "Escape") closeAcct(); return; }
     if (statsSheet.classList.contains("open")) { if (e.key === "Escape") closeStats(); return; }
     if (menu.classList.contains("open")) { if (e.key === "Escape") closeMenu(); return; }
@@ -690,7 +743,7 @@ footer {
   var sw = null;
   function onPage(target) { return !!(target && target.closest && target.closest("#sheet")); }
   function swipeStart(x, y, target) {
-    if (!onPage(target) || tool === "move") sw = { x: x, y: y, t: Date.now() }; else sw = null;
+    if (!onPage(target) || panTool()) sw = { x: x, y: y, t: Date.now() }; else sw = null;
   }
   function swipeEnd(x, y) {
     if (!sw) return;
@@ -720,6 +773,8 @@ footer {
   });
   var rt = null;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { fitSwatches(); if (idx) layout(); }, 150); });
+
+  function panTool(t) { t = t || tool; return t === "move" || t === "note"; }
 
   /* ---------- lines on the page ---------- */
   // Every Quran page of this scan has 15 evenly spaced lines in one of two layouts (by image height).
@@ -771,6 +826,7 @@ footer {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     strokes(idx).forEach(function (s) { drawStroke(ctx, s); });
     if (cur) drawStroke(ctx, cur);
+    if (!drawing) updateBadges();
   }
   function pt(e) {
     var r = ink.getBoundingClientRect();
@@ -803,11 +859,36 @@ footer {
     });
     if (any) { changed = true; ann[idx] = { s: working, t: Date.now() }; renderInk(); }
   }
+  // distance from a point to the edge of a stroke (0 when the point is on it)
+  function edgeDist(st, x, y) {
+    var p = st.p, d;
+    if (p.length === 2) d = Math.hypot(p[0] * cssW - x, p[1] * cssH - y);
+    else {
+      d = Infinity;
+      for (var i = 0; i < p.length - 2; i += 2) d = Math.min(d, segDist(x, y, p[i] * cssW, p[i + 1] * cssH, p[i + 2] * cssW, p[i + 3] * cssH));
+    }
+    return Math.max(0, d - st.w * cssW / 2);
+  }
+  // The eraser removes only the top highlight of a stack. Highlights drawn over the same mistake are
+  // protected until you lift your finger, so one swipe never clears the whole stack; tap again for the next one.
+  var protectedFromErase = [];
   function eraseAt(q) {
-    var x = q[0] * cssW, y = q[1] * cssH;
-    var before = working.length;
-    working = working.filter(function (s) { return !hit(s, x, y, 12 + s.w * cssW / 2); });
-    if (working.length !== before) { changed = true; ann[idx] = { s: working, t: Date.now() }; renderInk(); }
+    var x = q[0] * cssW, y = q[1] * cssH, best = -1, minD = Infinity, ds = [];
+    for (var i = 0; i < working.length; i++) {
+      var d = protectedFromErase.indexOf(working[i]) >= 0 ? Infinity : edgeDist(working[i], x, y);
+      ds.push(d);
+      if (d <= 12 && d < minD) minD = d;
+    }
+    // the closest highlight wins; where several sit on the same spot (a stack), the one drawn last is the top
+    for (var j = 0; j < ds.length; j++) if (ds[j] <= 12 && ds[j] <= minD + 2) best = j;
+    if (best < 0) return;
+    var gone = working[best];
+    if (gone.k === "hl") {
+      var gb = hlBox(gone);
+      working.forEach(function (o) { if (o !== gone && o.k === "hl" && sameMistake(gb, hlBox(o))) protectedFromErase.push(o); });
+    }
+    working = working.filter(function (o) { return o !== gone; });
+    changed = true; ann[idx] = { s: working, t: Date.now() }; renderInk();
   }
 
   // press and hold a highlight with the highlighter to switch it to the selected colour
@@ -831,11 +912,11 @@ footer {
     try { if (navigator.vibrate) navigator.vibrate(20); } catch (err) {}
   }
   ink.addEventListener("pointerdown", function (e) {
-    if (tool === "move" || !idx || drawing || pinch) return;
+    if (panTool() || !idx || drawing || pinch) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
     e.preventDefault();
     try { ink.setPointerCapture(e.pointerId); } catch (err) {}
-    drawing = true; changed = false;
+    drawing = true; changed = false; protectedFromErase = [];
     snap = { i: idx, before: strokes(idx).slice(), entry: ann[idx] };
     working = strokes(idx).slice();
     var q = pt(e);
@@ -886,7 +967,11 @@ footer {
     if (changed && snap) {
       snap.logLen = fixedLog.length;
       var kept = working;
-      if (tool === "erase") logRemoved(snap.i, snap.before.filter(function (st) { return kept.indexOf(st) < 0; }));
+      if (tool === "erase") logRemoved(snap.i, snap.before.filter(function (st) {
+        if (kept.indexOf(st) >= 0) return false;
+        // still marked by another highlight on the same words: only a repeat was removed, the mistake is not fixed
+        return !(st.k === "hl" && kept.some(function (o) { return o.k === "hl" && sameMistake(hlBox(st), hlBox(o)); }));
+      }));
       hist.push(snap); if (hist.length > 100) hist.shift();
       redoStack = [];
       setStrokes(snap.i, working);
@@ -897,7 +982,7 @@ footer {
   }
   ink.addEventListener("pointerup", endStroke);
   ink.addEventListener("pointercancel", endStroke);
-  ink.addEventListener("contextmenu", function (e) { if (tool !== "move") e.preventDefault(); });
+  ink.addEventListener("contextmenu", function (e) { if (!panTool()) e.preventDefault(); });
 
   /* ---------- pinch to zoom with two fingers, in any drawing tool ---------- */
   var pinch = null;
@@ -960,6 +1045,142 @@ footer {
     setZoom(zoom * Math.exp(-e.deltaY / 200));
   }, { passive: false });
 
+  /* ---------- notes on highlights ---------- */
+  function strokeKey(st) { return (st.d || 0) + "|" + st.p.join(","); }
+  function findStroke(i, key) {
+    var l = strokes(i);
+    for (var k = 0; k < l.length; k++) if (l[k].k === "hl" && strokeKey(l[k]) === key) return l[k];
+    return null;
+  }
+  var badgesEl = document.createElement("div"); badgesEl.id = "badges"; sheet.appendChild(badgesEl);
+  var badgeSig = "";
+  var NOTE_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V5a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>';
+  function updateBadges() {
+    if (!badgesEl || !cssW) return;
+    var items = [], placed = [];
+    strokes(idx).forEach(function (st) {
+      if (st.k !== "hl" || !(st.n || st.nm)) return;
+      var xmax = 0, ysum = 0, n = 0;
+      for (var q = 0; q < st.p.length; q += 2) { xmax = Math.max(xmax, st.p[q]); ysum += st.p[q + 1]; n++; }
+      var x = Math.min(cssW - 14, Math.max(14, xmax * cssW)), y = Math.max(14, ysum / n * cssH - st.w * cssW / 2);
+      var guard = 0;
+      while (guard++ < 8 && placed.some(function (o) { return Math.abs(o.x - x) < 26 && Math.abs(o.y - y) < 22; })) x = Math.max(14, x - 28);
+      placed.push({ x: x, y: y });
+      items.push({ st: st, x: Math.round(x), y: Math.round(y) });
+    });
+    var sig = cssW + "x" + cssH + "|" + noteSep + "|" + items.map(function (it) { return [it.x, it.y, strokeKey(it.st), it.st.c, it.st.nm ? 1 : 0, (it.st.n || "").length].join(","); }).join(";");
+    if (sig === badgeSig) return;
+    badgeSig = sig;
+    badgesEl.innerHTML = "";
+    items.forEach(function (it) {
+      var b = document.createElement("button");
+      b.className = "nb" + (noteSep && it.st.nm ? " nm" : "");
+      b.style.left = it.x + "px"; b.style.top = it.y + "px"; b.style.borderColor = it.st.c;
+      b.innerHTML = NOTE_ICON;
+      var label = it.st.n ? "Note: " + it.st.n.slice(0, 60) : "Highlight not counted as a mistake";
+      b.setAttribute("aria-label", label); b.title = label;
+      var key = strokeKey(it.st), page = idx;
+      b.addEventListener("click", function (e) { e.stopPropagation(); openNote(page, key); });
+      badgesEl.appendChild(b);
+    });
+  }
+
+  var noteCtx = null, noteDlg = $("#noteDlg");
+  function placeLabel(i, st) {
+    var m = i - OFFSET;
+    if (m < 1 || m > MUSHAF_PAGES) return m < 1 ? "Front pages" : "Back pages";
+    return "Page " + m + " · " + SURAHS[surahAt(m, strokeY(st))][0];
+  }
+  function openNote(i, key) {
+    var st = findStroke(i, key);
+    if (!st) return;
+    noteCtx = { i: i, key: key };
+    $("#ndSw").style.background = st.c;
+    $("#ndWhere").textContent = placeLabel(i, st);
+    $("#ndTitle").textContent = st.n ? "Note" : "Add a note";
+    $("#ndText").value = st.n || "";
+    $("#ndMistakeRow").hidden = !noteSep;
+    $("#ndMistake").checked = !st.nm;
+    $("#ndDelete").hidden = !st.n;
+    noteDlg.hidden = false;
+    if (!st.n) setTimeout(function () { $("#ndText").focus(); }, 60);
+  }
+  function closeNote() { noteCtx = null; noteDlg.hidden = true; $("#ndText").blur(); }
+  function commitNote(text, countAsMistake) {
+    if (!noteCtx) return;
+    var i = noteCtx.i, st = findStroke(i, noteCtx.key);
+    if (!st) { closeNote(); return; }
+    var nextNm = noteSep ? !countAsMistake : !!st.nm;
+    if ((st.n || "") === text && !!st.nm === nextNm) { closeNote(); return; }
+    var before = strokes(i).slice();
+    var next = before.map(function (o) {
+      if (o !== st) return o;
+      var c = {}; Object.keys(o).forEach(function (k) { c[k] = o[k]; });
+      if (text) c.n = text; else delete c.n;
+      if (nextNm) c.nm = true; else delete c.nm;
+      return c;
+    });
+    hist.push({ i: i, before: before, logLen: fixedLog.length }); redoStack = [];
+    setStrokes(i, next);
+    closeNote();
+    renderInk(); updateUndoRedo();
+  }
+  $("#ndSave").addEventListener("click", function () { commitNote($("#ndText").value.trim().slice(0, 1000), $("#ndMistake").checked); });
+  $("#ndDelete").addEventListener("click", function () { commitNote("", $("#ndMistake").checked); });
+  $("#ndX").addEventListener("click", closeNote);
+  $("#ndCancel").addEventListener("click", closeNote);
+  noteDlg.addEventListener("click", function (e) { if (e.target === noteDlg) closeNote(); });
+  $("#ndText").addEventListener("keydown", function (e) { if (e.key === "Escape") closeNote(); });
+
+  // Notes tool: tap a highlight to open its note (the topmost one where highlights are stacked)
+  ink.addEventListener("click", function (e) {
+    if (tool !== "note") return;
+    var q = pt(e), x = q[0] * cssW, y = q[1] * cssH, list = strokes(idx), ds = [], minD = Infinity, best = -1;
+    for (var i = 0; i < list.length; i++) {
+      var d = list[i].k === "hl" ? edgeDist(list[i], x, y) : Infinity;
+      ds.push(d); if (d <= 16 && d < minD) minD = d;
+    }
+    for (var j = 0; j < ds.length; j++) if (ds[j] <= 16 && ds[j] <= minD + 2) best = j;
+    if (best >= 0) openNote(idx, strokeKey(list[best]));
+  });
+
+  /* all notes */
+  var notesSheet = $("#notes");
+  function renderNotes() {
+    var items = [];
+    Object.keys(ann).forEach(function (k) {
+      var i = +k;
+      strokes(i).forEach(function (st) { if (st.k === "hl" && (st.n || st.nm)) items.push({ i: i, st: st, y: strokeY(st) }); });
+    });
+    items.sort(function (a, b) { return a.i - b.i || a.y - b.y; });
+    var all = items.length, q = $("#notesSearch").value.trim().toLowerCase();
+    if (q) items = items.filter(function (it) { return ((it.st.n || "") + " " + placeLabel(it.i, it.st)).toLowerCase().indexOf(q) >= 0; });
+    $("#notesCount").textContent = all + " note" + (all === 1 ? "" : "s") + (q ? " · " + items.length + " shown" : "");
+    var list = $("#notesList"); list.innerHTML = "";
+    if (!items.length) {
+      var e = document.createElement("p"); e.className = "empty";
+      e.textContent = all ? "No notes match your search." : "No notes yet. Choose Notes as the drawing tool, then tap a highlight to write one.";
+      list.appendChild(e); return;
+    }
+    items.forEach(function (it) {
+      var b = document.createElement("button"); b.className = "srow nrow";
+      b.innerHTML = '<div class="l1"><span class="dot"></span><span class="nm"></span><span class="pp"></span></div><span class="snip"></span>';
+      b.querySelector(".dot").style.background = it.st.c;
+      b.querySelector(".nm").textContent = placeLabel(it.i, it.st);
+      b.querySelector(".pp").textContent = noteSep && it.st.nm ? "not a mistake" : "";
+      b.querySelector(".snip").textContent = it.st.n || "No note text";
+      var key = strokeKey(it.st), page = it.i;
+      b.addEventListener("click", function () {
+        notesSheet.classList.remove("open"); closeMenu();
+        Promise.resolve(show(page)).then(function () { openNote(page, key); });
+      });
+      list.appendChild(b);
+    });
+  }
+  $("#notesBtn").addEventListener("click", function () { $("#notesSearch").value = ""; renderNotes(); notesSheet.classList.add("open"); notesSheet.scrollTop = 0; });
+  $("#notesBack").addEventListener("click", function () { notesSheet.classList.remove("open"); });
+  $("#notesSearch").addEventListener("input", renderNotes);
+
   /* ---------- bottom bar ---------- */
   var ICONS = {
     highlight: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l5 5-8.5 8.5H7.5V13.5L15 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M7.5 17.5L5 20h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -967,7 +1188,8 @@ footer {
     move: '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
   };
   ICONS.recolour = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11l6-6 7 7-6 6a2 2 0 01-2.8 0L5 13.8a2 2 0 010-2.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 3l3 2M19.5 15.5s1.5 1.8 1.5 3a1.5 1.5 0 01-3 0c0-1.2 1.5-3 1.5-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  var NAMES = { highlight: "Highlight", pen: "Pen", move: "Move", recolour: "Recolour" };
+  ICONS.note = '<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V5a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 8.5h8M8 12h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  var NAMES = { highlight: "Highlight", pen: "Pen", move: "Move", recolour: "Recolour", note: "Notes" };
   function setTool(t) {
     tool = t;
     var mb = $("#mainTool");
@@ -975,12 +1197,12 @@ footer {
     mb.setAttribute("aria-label", NAMES[mainTool]); mb.title = NAMES[mainTool];
     mb.classList.toggle("on", t === mainTool);
     $("#eraseBtn").classList.toggle("on", t === "erase");
-    var away = mainTool === "move" || mainTool === "recolour";
+    var away = mainTool === "move" || mainTool === "recolour" || mainTool === "note";
     $("#backHl").hidden = !away;
-    $("#backMode").textContent = mainTool === "move" ? "Move mode" : "Recolour mode";
+    $("#backMode").textContent = mainTool === "move" ? "Move mode" : (mainTool === "note" ? "Notes · tap a highlight" : "Recolour mode");
     updateNag();
-    ink.style.touchAction = t === "move" ? "auto" : "none";
-    ink.style.cursor = t === "move" ? "default" : (t === "erase" ? "cell" : "crosshair");
+    ink.style.touchAction = panTool(t) ? "auto" : "none";
+    ink.style.cursor = t === "move" ? "default" : (t === "note" ? "pointer" : (t === "erase" ? "cell" : "crosshair"));
   }
   $("#mainTool").addEventListener("click", function () { setTool(mainTool); });
   $("#backHl").addEventListener("click", function () { mainTool = "highlight"; savePrefs(); setTool("highlight"); syncMenu(); });
@@ -1100,6 +1322,8 @@ footer {
     $("#straight").checked = straight;
     $("#snapLines").checked = snapLines; $("#fitLine").checked = fitLine;
     $("#snapLines").disabled = !straight; $("#fitLine").disabled = !straight || !snapLines;
+    $("#noteSep").checked = noteSep;
+    $("#noteHint").hidden = mainTool !== "note";
     $("#swapTurn").checked = swapTurn;
     $("#zoomLabel").textContent = Math.round(zoom * 100) + "%";
     buildPalette();
@@ -1114,6 +1338,7 @@ footer {
   $("#straight").addEventListener("change", function (e) { straight = e.target.checked; savePrefs(); syncMenu(); });
   $("#snapLines").addEventListener("change", function (e) { snapLines = e.target.checked; savePrefs(); syncMenu(); });
   $("#fitLine").addEventListener("change", function (e) { fitLine = e.target.checked; savePrefs(); });
+  $("#noteSep").addEventListener("change", function (e) { noteSep = e.target.checked; savePrefs(); renderInk(); });
   $("#swapTurn").addEventListener("change", function (e) { swapTurn = e.target.checked; savePrefs(); updateTurns(); });
 
   function buildPalette() {
@@ -1253,7 +1478,7 @@ footer {
       if (m < 1 || m > MUSHAF_PAGES) return;
       var hls = strokes(+k).filter(function (st) { return st.k === "hl"; });
       hls.forEach(function (st) { used[st.c] = (used[st.c] || 0) + 1; });
-      groupHighlights(hls).forEach(function (g) {
+      groupHighlights(hls.filter(function (st) { return !(noteSep && st.nm); })).forEach(function (g) {
         // one mistake: it counts in a period if it was marked (or re-marked) then,
         // and is worth the highest colour value among its highlights
         var latest = 0; g.forEach(function (st) { latest = Math.max(latest, st.d || 0); });
@@ -1854,6 +2079,7 @@ footer {
     if (typeof p.straight === "boolean") straight = p.straight;
     if (typeof p.snapLines === "boolean") snapLines = p.snapLines;
     if (typeof p.fitLine === "boolean") fitLine = p.fitLine;
+    if (typeof p.noteSep === "boolean") noteSep = p.noteSep;
     if (typeof p.swapTurn === "boolean") swapTurn = p.swapTurn;
     if (Array.isArray(p.barColors) && p.barColors.length) barColors = p.barColors;
     if (p.weights && typeof p.weights === "object") weights = p.weights;

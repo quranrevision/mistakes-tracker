@@ -94,8 +94,8 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
   box-shadow: 0 1px 6px var(--shadow);
 }
 #history .ib:disabled { opacity: .35; }
-#statsTop {
-  position: absolute; z-index: 6; top: 60px; left: calc(10px + env(safe-area-inset-left, 0px));
+#topLeft { position: absolute; z-index: 6; top: 60px; left: calc(10px + env(safe-area-inset-left, 0px)); display: flex; gap: 8px; }
+#statsTop, #notesTop {
   height: 40px; min-height: 40px; padding: 0 12px 0 10px; border-radius: 10px;
   display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600;
   background: color-mix(in srgb, var(--panel) 88%, transparent);
@@ -111,16 +111,49 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
 .dlg .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; width: min(520px, 100%); display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; }
 .dlg textarea { width: 100%; box-sizing: border-box; min-height: 120px; font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); color: var(--ink); resize: vertical; }
 .dlg .nsw { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); flex: none; }
-#toolSeg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+#toolSeg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+#tidyBtn { white-space: normal; text-align: left; line-height: 1.25; }
+#noteStyleSeg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+#noteStyleSeg button { border-radius: 8px !important; border-left-width: 1px !important; padding: 6px 4px; }
 #toolSeg button { border-radius: 8px !important; border-left-width: 1px !important; }
 .search { width: 100%; box-sizing: border-box; font-size: 16px; padding: 9px 10px; min-height: 42px; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); color: var(--ink); }
 .nrow .snip { display: block; margin-top: 4px; font-weight: 400; color: var(--ink); white-space: pre-wrap; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 .nrow .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; align-self: center; border: 1px solid var(--line); }
 #notes { z-index: 31; }
+.dlg .box { max-height: calc(100vh - 80px - env(safe-area-inset-top, 0px)); overflow: auto; }
+.dlg .nrowc { display: flex; flex-wrap: wrap; gap: 8px; }
+.dlg .cdot { width: 28px; height: 28px; min-height: 0; padding: 0; border-radius: 50%; border: 2px solid var(--line); }
+.dlg .cdot[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--ink); }
+.dlg .seg button { flex: 1; }
+
+/* settings groups */
+.quick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 0 8px; }
+.quick button { min-height: 48px; font-weight: 600; }
+.grp { border-bottom: 1px solid var(--line); }
+.grp > summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 14px 2px; min-height: 44px; cursor: pointer; }
+.grp > summary::-webkit-details-marker { display: none; }
+.grp > summary .gtx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.grp > summary b { font-size: 16px; }
+.grp > summary small { color: var(--muted); font-size: 13px; }
+.grp > summary::after { content: ""; width: 9px; height: 9px; margin: 0 6px 3px 0; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .15s; flex: none; }
+.grp[open] > summary::after { transform: rotate(-135deg); margin-bottom: 0; margin-top: 4px; }
+.grp > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.gbody { display: flex; flex-direction: column; gap: 20px; padding: 2px 0 20px; }
+.sub { display: flex; flex-direction: column; gap: 10px; }
+.sub h3 { margin: 0; font-size: 14px; }
+.sub p { margin: 0; color: var(--muted); font-size: 13.5px; }
+.pvwrap { position: relative; display: inline-block; padding: 10px 26px; font-size: 18px; color: #17211c; }
+#notePrev { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 12px; text-align: center; }
+#pvMark { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; }
+@media (prefers-reduced-motion: reduce) { .grp > summary::after { transition: none; } }
 
 /* shown when the drawing tool is Move or Recolour */
+#floaters { position: absolute; z-index: 7; left: calc(8px + env(safe-area-inset-left, 0px)); right: calc(8px + env(safe-area-inset-right, 0px)); bottom: 70px; display: flex; flex-wrap: wrap-reverse; justify-content: space-between; align-items: flex-end; gap: 8px; pointer-events: none; }
+#floaters > *, .fright > * { pointer-events: auto; }
+.fright { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; margin-left: auto; pointer-events: none; }
+#addNote { display: flex; align-items: center; gap: 7px; min-height: 42px; padding: 8px 14px 8px 12px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 2px 12px var(--shadow); font-size: 14px; font-weight: 600; }
+#addNote.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 #backHl {
-  position: absolute; z-index: 7; left: 50%; transform: translateX(-50%); bottom: 72px;
   display: flex; align-items: center; gap: 8px; white-space: nowrap;
   padding: 8px 14px; min-height: 42px; border-radius: 999px;
   background: var(--accent); color: var(--accent-ink); border-color: var(--accent);
@@ -131,7 +164,7 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
 #backHl .mode::after { content: "·"; margin-left: 8px; }
 
 /* sign-in reminder (sits where the back-to-highlighter button would) */
-#nag { position: absolute; z-index: 7; left: 50%; transform: translateX(-50%); bottom: 72px; display: flex; align-items: center; gap: 4px; white-space: nowrap; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 4px 4px 14px; box-shadow: 0 2px 12px var(--shadow); font-size: 13.5px; }
+#nag { display: flex; align-items: center; gap: 4px; white-space: nowrap; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 4px 4px 14px; box-shadow: 0 2px 12px var(--shadow); font-size: 13.5px; }
 #nag[hidden] { display: none; }
 #nag button { min-height: 34px; padding: 4px 12px; border-radius: 999px; }
 #nag .x { background: transparent; border-color: transparent; padding: 4px 10px; }
@@ -254,14 +287,22 @@ footer {
     <button id="turnR" class="turn" aria-label="Previous page"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
 
+  <div id="topLeft">
   <button id="statsTop" title="Mistake stats" aria-label="Mistake stats"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><span>Stats</span></button>
+  <button id="notesTop" title="All notes" aria-label="All notes"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V5a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8 8.5h8M8 12h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Notes</span></button>
+  </div>
   <div id="history" role="group" aria-label="Undo and redo">
     <button id="undoBtn" class="ib" aria-label="Undo" title="Undo"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
     <button id="redoBtn" class="ib" aria-label="Redo" title="Redo"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14l5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
   </div>
 
-  <div id="nag" hidden role="status"><span>Notes are only on this device</span><button id="nagSignIn" class="primary">Sign in</button><button id="nagX" class="x" aria-label="Not now">✕</button></div>
-  <button id="backHl" hidden><span class="mode" id="backMode"></span><b>Back to highlighter</b></button>
+  <div id="floaters">
+    <button id="addNote" aria-pressed="false"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="17" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v3M10.5 4h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span id="addNoteText">Add note</span></button>
+    <div class="fright">
+      <div id="nag" hidden role="status"><span>Marks are only on this device</span><button id="nagSignIn" class="primary">Sign in</button><button id="nagX" class="x" aria-label="Not now">✕</button></div>
+      <button id="backHl" hidden><span class="mode" id="backMode"></span><b>Back to highlighter</b></button>
+    </div>
+  </div>
 
   <footer>
     <button id="mainTool" class="ib" aria-label="Highlight" title="Highlight"></button>
@@ -277,100 +318,138 @@ footer {
     <button id="menuClose" class="primary">Close</button>
   </div>
   <div class="body">
-    <section id="acctSec">
-      <h3>Account</h3>
-      <div class="syncline"><span class="syncdot" id="menuDot"></span><span id="menuAcct">Not signed in</span></div>
-      <div class="row"><button id="acctBtn" class="primary">Sign in</button></div>
-    </section>
+    <div class="quick">
+      <button id="qStats">Mistake stats</button>
+      <button id="qNotes">All notes</button>
+    </div>
 
-    <section>
-      <h3>Drawing tool</h3>
-      <p>The first button on the bottom bar uses this tool.</p>
-      <div class="seg" id="toolSeg" role="group" aria-label="Drawing tool">
-        <button data-main="highlight">Highlighter</button>
-        <button data-main="pen">Pen</button>
-        <button data-main="move">Move</button>
-        <button data-main="recolour">Recolour</button>
-        <button data-main="note">Notes</button>
+    <details class="grp" id="g-draw">
+      <summary><span class="gtx"><b>Drawing</b><small>Tool, ink, snapping to lines</small></span></summary>
+      <div class="gbody">
+        <div class="sub">
+          <h3>Tool on the bottom bar</h3>
+          <div class="seg" id="toolSeg" role="group" aria-label="Drawing tool">
+            <button data-main="highlight">Highlighter</button>
+            <button data-main="pen">Pen</button>
+            <button data-main="move">Move</button>
+            <button data-main="recolour">Recolour</button>
+          </div>
+          <p>Press and hold a highlight with the highlighter to switch it to the colour selected on the bar. Its date is kept, so it still counts as the same mistake.</p>
+          <p id="moveHint" hidden>Move lets you scroll a zoomed page and swipe to turn pages.</p>
+          <p id="recolourHint" hidden>Recolour: pick a colour on the bar, then tap or drag over highlights to change them to it. Switch back to Highlighter when you are done.</p>
+        </div>
+        <div class="sub">
+          <h3>Ink</h3>
+          <label class="sl"><span>Opacity</span><input id="opacity" type="range" min="15" max="100" value="45"><b id="opLabel">45%</b></label>
+          <label class="sl"><span>Highlighter size</span><input id="hlSize" type="range" min="1" max="12" value="6"><b id="hlLabel">6</b></label>
+          <label class="sl"><span>Pen size</span><input id="penSize" type="range" min="1" max="12" value="3"><b id="penLabel">3</b></label>
+        </div>
+        <div class="sub">
+          <h3>Lines</h3>
+          <label class="check"><input type="checkbox" id="straight" checked> Straight highlights along the line</label>
+          <label class="check"><input type="checkbox" id="snapLines" checked> Snap onto the nearest line</label>
+          <label class="check"><input type="checkbox" id="fitLine" checked> Make snapped highlights the height of the line</label>
+          <div class="row"><button id="tidyBtn">Snap my existing highlights onto their lines</button></div>
+          <p class="note" id="tidyMsg" role="status"></p>
+        </div>
       </div>
-      <p>Tip: with the highlighter, press and hold a highlight to switch it to the colour selected on the bar. Its date is kept, so it still counts as the same mistake.</p>
-      <p id="noteHint" hidden>Notes: tap a highlight to add or edit a note on it. Highlights with notes show a note icon; tap the icon any time, in any tool, to read or edit the note.</p>
-      <p id="moveHint" hidden>Move lets you scroll a zoomed page and swipe to turn pages.</p>
-      <p id="recolourHint" hidden>Recolour: pick a colour on the bar, then tap or drag over highlights to change them to it. They keep their original date, so they are not counted as new or fixed mistakes. Switch back to Highlighter when you are done.</p>
-    </section>
+    </details>
 
-    <section>
-      <h3>Notes</h3>
-      <p>Choose Notes as the drawing tool, then tap a highlight to write a note on it.</p>
-      <div class="row"><button id="notesBtn">See all my notes</button></div>
-      <label class="check"><input type="checkbox" id="noteSep"> Let notes be separate from mistakes</label>
-      <p>When on, each note gets a “Count as a mistake” switch. A highlight switched off is left out of your stats, so you can use highlights for reminders that are not mistakes. When off, every highlight counts as before.</p>
-    </section>
-
-    <section>
-      <h3>Ink</h3>
-      <label class="sl"><span>Opacity</span><input id="opacity" type="range" min="15" max="100" value="45"><b id="opLabel">45%</b></label>
-      <label class="sl"><span>Highlighter size</span><input id="hlSize" type="range" min="1" max="12" value="6"><b id="hlLabel">6</b></label>
-      <label class="sl"><span>Pen size</span><input id="penSize" type="range" min="1" max="12" value="3"><b id="penLabel">3</b></label>
-      <label class="check"><input type="checkbox" id="straight" checked> Straight highlights along the line</label>
-      <label class="check"><input type="checkbox" id="snapLines" checked> Snap straight highlights onto the nearest line</label>
-      <label class="check"><input type="checkbox" id="fitLine" checked> Make snapped highlights the height of the line</label>
-      <div class="row"><button id="tidyBtn">Snap my existing highlights onto their lines</button></div>
-      <p class="note" id="tidyMsg" role="status"></p>
-    </section>
-
-    <section>
-      <h3>Colours on the bar</h3>
-      <p>Tap to add or remove a colour from the bottom bar. To change their order, open Stats and drag them in Colour values and order.</p>
-      <div id="palette"></div>
-    </section>
-
-    <section>
-      <h3>View</h3>
-      <div class="row">
-        <span style="min-width:4.5em">Zoom</span>
-        <button id="zout" aria-label="Zoom out">−</button>
-        <b id="zoomLabel" style="min-width:3.5em;text-align:center">100%</b>
-        <button id="zin" aria-label="Zoom in">+</button>
-        <button id="zfit">Fit page</button>
+    <details class="grp" id="g-notes">
+      <summary><span class="gtx"><b>Notes</b><small>How the Add note button marks the page</small></span></summary>
+      <div class="gbody">
+        <div class="sub">
+          <p>Tap <b>Add note</b> above the bottom bar, then tap or drag on a line. Write your note and it is kept with the mark. Tap the note icon on a mark any time to read or edit it. In Add note mode, tapping an existing highlight adds a note to it.</p>
+          <h3>Mark style</h3>
+          <div id="noteStyleSeg" role="group" aria-label="How a note is marked">
+            <button data-nstyle="border">Highlight border</button>
+            <button data-nstyle="hl">Actual highlight</button>
+            <button data-nstyle="none">Neither</button>
+          </div>
+          <p>A highlight border does not count as a mistake. An actual highlight counts like any highlight, and you can untick that in the note. Neither leaves only the note icon.</p>
+        </div>
+        <div class="sub">
+          <label class="sl"><span>Border thickness</span><input id="noteThick" type="range" min="1" max="10" value="3"><b id="ntLabel">3</b></label>
+          <label class="sl"><span>Opacity</span><input id="noteOp" type="range" min="15" max="100" value="80"><b id="noLabel">80%</b></label>
+          <div id="notePrev" aria-hidden="true"><span class="pvwrap">Sample line<i id="pvMark"></i></span></div>
+        </div>
+        <div class="row"><button id="notesBtn">See all my notes</button></div>
       </div>
-      <label class="check"><input type="checkbox" id="swapTurn"> Swap the page-turn buttons (left goes back)</label>
-    </section>
+    </details>
 
-    <section>
-      <h3>This page</h3>
-      <div class="row"><button id="clearBtn">Clear all notes on this page</button></div>
-    </section>
-
-    <section>
-      <h3>Backup</h3>
-      <p>Notes are saved on this device. Keep a backup file somewhere safe, such as Files, Google Drive or an email to yourself. <span id="lastBk"></span></p>
-      <div class="row">
-        <button id="bkSave" class="primary">Save backup file</button>
-        <button id="bkOpen">Load backup file</button>
+    <details class="grp" id="g-colours">
+      <summary><span class="gtx"><b>Colours</b><small>Which colours are on the bottom bar</small></span></summary>
+      <div class="gbody">
+        <div class="sub">
+          <p>Tap a colour to add it to or remove it from the bottom bar. To change their order or what each colour is worth, open Mistake stats.</p>
+          <div id="palette"></div>
+        </div>
       </div>
-      <p class="note" id="bkLock" hidden>Loading a backup replaces notes in your account, so it only works on your main device.</p>
-      <p>Or copy and paste notes as text:</p>
-      <textarea id="bk" spellcheck="false" placeholder="Paste a backup here"></textarea>
-      <div class="row">
-        <button id="bkCopy">Copy text</button>
-        <button id="bkLoad">Load pasted text</button>
+    </details>
+
+    <details class="grp" id="g-view">
+      <summary><span class="gtx"><b>View and page</b><small>Zoom, page-turn buttons, clear this page</small></span></summary>
+      <div class="gbody">
+        <div class="sub">
+          <div class="row">
+            <span style="min-width:4.5em">Zoom</span>
+            <button id="zout" aria-label="Zoom out">−</button>
+            <b id="zoomLabel" style="min-width:3.5em;text-align:center">100%</b>
+            <button id="zin" aria-label="Zoom in">+</button>
+            <button id="zfit">Fit page</button>
+          </div>
+          <label class="check"><input type="checkbox" id="swapTurn"> Swap the page-turn buttons (left goes back)</label>
+        </div>
+        <div class="sub">
+          <h3>This page</h3>
+          <div class="row"><button id="clearBtn">Clear all marks on this page</button></div>
+        </div>
       </div>
-      <p class="note" id="bkMsg" role="status"></p>
-    </section>
+    </details>
 
-    <section>
-      <h3>Offline</h3>
-      <p id="offText">Pages are saved as you read them.</p>
-      <div id="offBar" hidden><i></i></div>
-      <div class="row"><button id="offBtn">Save all pages for offline</button></div>
-    </section>
+    <details class="grp" id="g-acct">
+      <summary><span class="gtx"><b>Account and backup</b><small>Sign in, sync, save a backup file</small></span></summary>
+      <div class="gbody">
+        <div class="sub" id="acctSec">
+          <h3>Account</h3>
+          <div class="syncline"><span class="syncdot" id="menuDot"></span><span id="menuAcct">Not signed in</span></div>
+          <div class="row"><button id="acctBtn" class="primary">Sign in</button></div>
+        </div>
+        <div class="sub">
+          <h3>Backup</h3>
+          <p>Marks and notes are saved on this device. Keep a backup file somewhere safe, such as Files, Google Drive or an email to yourself. <span id="lastBk"></span></p>
+          <div class="row">
+            <button id="bkSave" class="primary">Save backup file</button>
+            <button id="bkOpen">Load backup file</button>
+          </div>
+          <p class="note" id="bkLock" hidden>Loading a backup replaces notes in your account, so it only works on your main device.</p>
+          <p>Or copy and paste as text:</p>
+          <textarea id="bk" spellcheck="false" placeholder="Paste a backup here"></textarea>
+          <div class="row">
+            <button id="bkCopy">Copy text</button>
+            <button id="bkLoad">Load pasted text</button>
+          </div>
+          <p class="note" id="bkMsg" role="status"></p>
+        </div>
+      </div>
+    </details>
 
-    <section id="installSec">
-      <h3>Install as an app</h3>
-      <p id="installText"></p>
-      <div class="row"><button id="installBtn" class="primary" hidden>Install app</button></div>
-    </section>
+    <details class="grp" id="g-offline">
+      <summary><span class="gtx"><b>Offline and install</b><small>Read without internet, add to your home screen</small></span></summary>
+      <div class="gbody">
+        <div class="sub">
+          <h3>Offline</h3>
+          <p id="offText">Pages are saved as you read them.</p>
+          <div id="offBar" hidden><i></i></div>
+          <div class="row"><button id="offBtn">Save all pages for offline</button></div>
+        </div>
+        <div class="sub" id="installSec">
+          <h3>Install as an app</h3>
+          <p id="installText"></p>
+          <div class="row"><button id="installBtn" class="primary" hidden>Install app</button></div>
+        </div>
+      </div>
+    </details>
   </div>
 </div>
 <div id="stats" class="sheet" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
@@ -453,7 +532,15 @@ footer {
   <div class="box">
     <div class="row"><span class="nsw" id="ndSw"></span><b id="ndTitle">Note</b><span class="grow"></span><button id="ndX" aria-label="Close">✕</button></div>
     <p class="muted" id="ndWhere" style="margin:0"></p>
-    <textarea id="ndText" maxlength="1000" placeholder="Write a note about this highlight" aria-label="Note"></textarea>
+    <textarea id="ndText" maxlength="1000" placeholder="Write a note" aria-label="Note"></textarea>
+    <div class="seg" id="ndStyle" role="group" aria-label="How the note is marked on the page">
+      <button data-ns="border">Highlight border</button>
+      <button data-ns="hl">Highlight</button>
+      <button data-ns="none">Neither</button>
+    </div>
+    <label class="sl" id="ndThickRow"><span>Border</span><input id="ndThick" type="range" min="1" max="10"><b id="ndThickL"></b></label>
+    <label class="sl" id="ndOpRow"><span>Opacity</span><input id="ndOp" type="range" min="15" max="100"><b id="ndOpL"></b></label>
+    <div class="nrowc" id="ndColors" role="group" aria-label="Colour"></div>
     <label class="check" id="ndMistakeRow"><input type="checkbox" id="ndMistake" checked> Count as a mistake</label>
     <div class="row"><button id="ndSave" class="primary">Save</button><button id="ndDelete">Delete note</button><span class="grow"></span><button id="ndCancel">Cancel</button></div>
   </div>
@@ -560,7 +647,7 @@ footer {
   var sizes = { pen: 3, hl: 6 };
   var barColors = ["#f5c400", "#2fb36a", "#ee5a9b", "#3a86e8", "#e23b3b"];
   var weights = {}, statPeriod = 0, statSort = "rate", groupJ30 = false, showZero = false;
-  var snapLines = true, fitLine = true, noteSep = false;
+  var snapLines = true, fitLine = true, noteStyle = "border", noteThick = 3, noteOp = 80;
   var ann = {}, hist = [], redoStack = [];
   var cur = null, snap = null, changed = false, drawing = false;
   var showId = 0;
@@ -575,8 +662,7 @@ footer {
   function logRemoved(i, removed) {
     var now = Date.now(), added = 0;
     removed.forEach(function (st) {
-      if (!st || st.k !== "hl") return;
-      if (noteSep && st.nm) return;   // a note-only highlight is not a mistake
+      if (!st || !realHl(st) || st.nm) return;   // borders, pins and note-only highlights are not mistakes
       if (st.d && now - st.d <= FIX_AFTER) return;   // a quick correction, not a mistake
       var t = 0, n = 0; for (var q = 1; q < st.p.length; q += 2) { t += st.p[q]; n++; }
       fixedLog.push({ i: i, y: n ? Math.round(t / n * 10000) / 10000 : 0, c: st.c, d: st.d || 0, f: now });
@@ -605,12 +691,15 @@ footer {
       if (typeof p.showZero === "boolean") showZero = p.showZero;
       if (typeof p.snapLines === "boolean") snapLines = p.snapLines;
       if (typeof p.fitLine === "boolean") fitLine = p.fitLine;
-      if (typeof p.noteSep === "boolean") noteSep = p.noteSep;
+      if (p.noteStyle === "border" || p.noteStyle === "hl" || p.noteStyle === "none") noteStyle = p.noteStyle;
+      if (p.noteThick >= 1 && p.noteThick <= 10) noteThick = p.noteThick;
+      if (p.noteOp >= 15 && p.noteOp <= 100) noteOp = p.noteOp;
     } catch (e) {}
   })();
+  if (mainTool === "note") mainTool = "highlight";
   tool = mainTool;
   function savePrefs(fromCloud) {
-    lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, mainTool: mainTool, barColors: barColors, weights: weights, statPeriod: statPeriod, statSort: statSort, groupJ30: groupJ30, showZero: showZero, snapLines: snapLines, fitLine: fitLine, noteSep: noteSep }));
+    lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, mainTool: mainTool, barColors: barColors, weights: weights, statPeriod: statPeriod, statSort: statSort, groupJ30: groupJ30, showZero: showZero, snapLines: snapLines, fitLine: fitLine, noteStyle: noteStyle, noteThick: noteThick, noteOp: noteOp }));
     // settings that follow you between devices
     var shared = JSON.stringify(sharedPrefs());
     if (shared !== lastShared) {
@@ -620,7 +709,7 @@ footer {
   }
   var LS_PREFS_T = "mushaf-notes:v2:prefsTime";
   var prefsT = parseInt(lsGet(LS_PREFS_T), 10) || 0;
-  function sharedPrefs() { return { opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, barColors: barColors, weights: weights, groupJ30: groupJ30, showZero: showZero, statSort: statSort, snapLines: snapLines, fitLine: fitLine, noteSep: noteSep }; }
+  function sharedPrefs() { return { opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, barColors: barColors, weights: weights, groupJ30: groupJ30, showZero: showZero, statSort: statSort, snapLines: snapLines, fitLine: fitLine, noteStyle: noteStyle, noteThick: noteThick, noteOp: noteOp }; }
   var lastShared = JSON.stringify(sharedPrefs());
   var saveTimer = null, askedPersist = false;
   function saveLocal() {
@@ -692,8 +781,8 @@ footer {
     stage.style.bottom = footH + "px"; stage.style.top = headH + "px";
     $("#sides").style.bottom = footH + "px"; $("#sides").style.top = headH + "px";
     $("#history").style.top = (headH + 8) + "px";
-    $("#statsTop").style.top = (headH + 8) + "px";
-    $("#backHl").style.bottom = (footH + 10) + "px";
+    $("#topLeft").style.top = (headH + 8) + "px";
+    $("#floaters").style.bottom = (footH + 10) + "px";
     var nw = img.naturalWidth || 750, nh = img.naturalHeight || 1072;
     var availW = Math.max(120, stage.clientWidth - 8);
     var availH = Math.max(160, stage.clientHeight - 8);
@@ -725,7 +814,7 @@ footer {
   document.addEventListener("keydown", function (e) {
     var t = e.target && e.target.tagName;
     if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT") return;
-    if (!$("#noteDlg").hidden) { if (e.key === "Escape") closeNote(); return; }
+    if (!$("#noteDlg").hidden) { if (e.key === "Escape") cancelNote(); return; }
     if ($("#notes").classList.contains("open")) { if (e.key === "Escape") $("#notes").classList.remove("open"); return; }
     if (acct.classList.contains("open")) { if (e.key === "Escape") closeAcct(); return; }
     if (statsSheet.classList.contains("open")) { if (e.key === "Escape") closeStats(); return; }
@@ -774,7 +863,10 @@ footer {
   var rt = null;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { fitSwatches(); if (idx) layout(); }, 150); });
 
-  function panTool(t) { t = t || tool; return t === "move" || t === "note"; }
+  function panTool(t) { t = t || tool; return t === "move"; }
+  // a "real" highlight is a mistake mark; borders and pins made with Add note are not
+  function realHl(st) { return st.k === "hl" && (!st.ns || st.ns === "hl"); }
+  var NOTE_BW = 0.0018;   // border thickness per step, as a fraction of the page width
 
   /* ---------- lines on the page ---------- */
   // Every Quran page of this scan has 15 evenly spaced lines in one of two layouts (by image height).
@@ -801,6 +893,14 @@ footer {
     ctx.save();
     ctx.globalAlpha = s.a; ctx.strokeStyle = s.c; ctx.fillStyle = s.c;
     var lw = s.w * cssW;
+    if (s.ns === "none") { ctx.restore(); return; }
+    if (s.ns === "border") {
+      var bx0 = 1, bx1 = 0;
+      for (var bi = 0; bi < p.length; bi += 2) { bx0 = Math.min(bx0, p[bi]); bx1 = Math.max(bx1, p[bi]); }
+      ctx.lineWidth = Math.max(1, (s.bw || 3 * NOTE_BW) * cssW); ctx.lineJoin = "round";
+      ctx.strokeRect(bx0 * cssW, p[1] * cssH - lw / 2, (bx1 - bx0) * cssW, lw);
+      ctx.restore(); return;
+    }
     ctx.lineWidth = lw; ctx.lineJoin = "round";
     ctx.lineCap = s.k === "hl" ? "butt" : "round";
     if (p.length === 2) {
@@ -847,6 +947,7 @@ footer {
     return false;
   }
   var working = null; // strokes array being edited during a gesture
+  var noteDraw = false, noteDown = null;
   // recolour: change the colour of highlights the finger passes over, keeping their dates
   function recolourAt(q) {
     var x = q[0] * cssW, y = q[1] * cssH, any = false;
@@ -858,6 +959,15 @@ footer {
       return copy;
     });
     if (any) { changed = true; ann[idx] = { s: working, t: Date.now() }; renderInk(); }
+  }
+  function pickHighlight(list, x, y) {
+    var ds = [], minD = Infinity, best = -1;
+    for (var i = 0; i < list.length; i++) {
+      var d = list[i].k === "hl" ? edgeDist(list[i], x, y) : Infinity;
+      ds.push(d); if (d <= 16 && d < minD) minD = d;
+    }
+    for (var j = 0; j < ds.length; j++) if (ds[j] <= 16 && ds[j] <= minD + 2) best = j;
+    return best;
   }
   // distance from a point to the edge of a stroke (0 when the point is on it)
   function edgeDist(st, x, y) {
@@ -883,9 +993,9 @@ footer {
     for (var j = 0; j < ds.length; j++) if (ds[j] <= 12 && ds[j] <= minD + 2) best = j;
     if (best < 0) return;
     var gone = working[best];
-    if (gone.k === "hl") {
+    if (realHl(gone)) {
       var gb = hlBox(gone);
-      working.forEach(function (o) { if (o !== gone && o.k === "hl" && sameMistake(gb, hlBox(o))) protectedFromErase.push(o); });
+      working.forEach(function (o) { if (o !== gone && realHl(o) && sameMistake(gb, hlBox(o))) protectedFromErase.push(o); });
     }
     working = working.filter(function (o) { return o !== gone; });
     changed = true; ann[idx] = { s: working, t: Date.now() }; renderInk();
@@ -922,14 +1032,16 @@ footer {
     var q = pt(e);
     if (tool === "erase") { eraseAt(q); return; }
     if (tool === "recolour") { recolourAt(q); return; }
-    var hl = tool === "highlight";
-    cur = { k: hl ? "hl" : "pen", c: color, a: opacity / 100, w: hl ? sizes.hl * 0.01 : sizes.pen * 0.002, p: [q[0], q[1]], d: Date.now() };
-    if (hl && snapOn()) {
+    noteDraw = tool === "note"; noteDown = q;
+    var hl = tool === "highlight" || noteDraw;
+    cur = { k: hl ? "hl" : "pen", c: color, a: noteDraw ? noteOp / 100 : opacity / 100, w: hl ? sizes.hl * 0.01 : sizes.pen * 0.002, p: [q[0], q[1]], d: Date.now() };
+    if (noteDraw && noteStyle !== "hl") { cur.ns = noteStyle; if (noteStyle === "border") cur.bw = noteThick * NOTE_BW; }
+    if (hl && (noteDraw ? snapLines : snapOn())) {
       var sn = lineSnap(idx, q[1], img.naturalHeight);
       if (sn) { cur.p[1] = sn.y; if (fitLine) cur.w = sn.w; cur.snapped = true; }
     }
     holdDone = false; cancelHold();
-    if (hl) hold = { x: e.clientX, y: e.clientY, timer: setTimeout(function () { holdRecolour(q); }, LONG_PRESS) };
+    if (tool === "highlight") hold = { x: e.clientX, y: e.clientY, timer: setTimeout(function () { holdRecolour(q); }, LONG_PRESS) };
     renderInk();
   });
   ink.addEventListener("pointermove", function (e) {
@@ -944,7 +1056,7 @@ footer {
       if (tool === "erase") { eraseAt(q); continue; }
       if (tool === "recolour") { recolourAt(q); continue; }
       if (!cur) continue;
-      if (cur.k === "hl" && (straight || e.shiftKey)) {
+      if (cur.k === "hl" && (straight || e.shiftKey || noteDraw)) {
         // stays on the line it started on, however far the finger drifts up or down
         cur.p = [cur.p[0], cur.p[1], q[0], cur.p[1]];
       } else {
@@ -959,18 +1071,33 @@ footer {
     if (!drawing) return;
     drawing = false;
     holdDone = false;
+    var openAfter = null;
     if (cur) {
       var ok = cur.k === "hl" ? (cur.p.length >= 4 && Math.abs(cur.p[cur.p.length - 2] - cur.p[0]) > 0.004) : true;
+      if (noteDraw) {
+        var tapNote = cur.p.length < 4 || Math.abs(cur.p[cur.p.length - 2] - cur.p[0]) < 0.012;
+        if (tapNote) {
+          // a tap: open the note of the highlight under the finger, or start a short note on that line
+          var hit0 = pickHighlight(working, noteDown[0] * cssW, noteDown[1] * cssH);
+          if (hit0 >= 0) { openAfter = { i: snap.i, key: strokeKey(working[hit0]), isNew: false }; ok = false; }
+          else {
+            var cx = cur.p[0], x0 = Math.max(0.03, cx - 0.08), x1 = Math.min(0.97, cx + 0.08);
+            cur.p = [x1, cur.p[1], x0, cur.p[1]]; ok = true;
+          }
+        }
+        if (ok) openAfter = { i: snap.i, key: strokeKey(cur), isNew: true };
+      }
       if (ok) { delete cur.snapped; working.push(cur); changed = true; }
       cur = null;
     }
+    noteDraw = false;
     if (changed && snap) {
       snap.logLen = fixedLog.length;
       var kept = working;
       if (tool === "erase") logRemoved(snap.i, snap.before.filter(function (st) {
         if (kept.indexOf(st) >= 0) return false;
         // still marked by another highlight on the same words: only a repeat was removed, the mistake is not fixed
-        return !(st.k === "hl" && kept.some(function (o) { return o.k === "hl" && sameMistake(hlBox(st), hlBox(o)); }));
+        return !(realHl(st) && kept.some(function (o) { return realHl(o) && sameMistake(hlBox(st), hlBox(o)); }));
       }));
       hist.push(snap); if (hist.length > 100) hist.shift();
       redoStack = [];
@@ -979,6 +1106,7 @@ footer {
     snap = null; working = null;
     renderInk();
     updateUndoRedo();
+    if (openAfter) openNote(openAfter.i, openAfter.key, openAfter.isNew);
   }
   ink.addEventListener("pointerup", endStroke);
   ink.addEventListener("pointercancel", endStroke);
@@ -1045,13 +1173,21 @@ footer {
     setZoom(zoom * Math.exp(-e.deltaY / 200));
   }, { passive: false });
 
-  /* ---------- notes on highlights ---------- */
+  /* ---------- notes ---------- */
   function strokeKey(st) { return (st.d || 0) + "|" + st.p.join(","); }
   function findStroke(i, key) {
     var l = strokes(i);
     for (var k = 0; k < l.length; k++) if (l[k].k === "hl" && strokeKey(l[k]) === key) return l[k];
     return null;
   }
+  function styleOf(st) { return st.ns === "border" || st.ns === "none" ? st.ns : "hl"; }
+  function placeLabel(i, st) {
+    var m = i - OFFSET;
+    if (m < 1 || m > MUSHAF_PAGES) return m < 1 ? "Front pages" : "Back pages";
+    return "Page " + m + " · " + SURAHS[surahAt(m, strokeY(st))][0];
+  }
+
+  /* note icons on marks */
   var badgesEl = document.createElement("div"); badgesEl.id = "badges"; sheet.appendChild(badgesEl);
   var badgeSig = "";
   var NOTE_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V5a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>';
@@ -1068,81 +1204,109 @@ footer {
       placed.push({ x: x, y: y });
       items.push({ st: st, x: Math.round(x), y: Math.round(y) });
     });
-    var sig = cssW + "x" + cssH + "|" + noteSep + "|" + items.map(function (it) { return [it.x, it.y, strokeKey(it.st), it.st.c, it.st.nm ? 1 : 0, (it.st.n || "").length].join(","); }).join(";");
+    var sig = cssW + "x" + cssH + "|" + items.map(function (it) { return [it.x, it.y, strokeKey(it.st), it.st.c, it.st.nm ? 1 : 0, (it.st.n || "").length].join(","); }).join(";");
     if (sig === badgeSig) return;
     badgeSig = sig;
     badgesEl.innerHTML = "";
     items.forEach(function (it) {
       var b = document.createElement("button");
-      b.className = "nb" + (noteSep && it.st.nm ? " nm" : "");
+      b.className = "nb" + (it.st.nm ? " nm" : "");
       b.style.left = it.x + "px"; b.style.top = it.y + "px"; b.style.borderColor = it.st.c;
       b.innerHTML = NOTE_ICON;
       var label = it.st.n ? "Note: " + it.st.n.slice(0, 60) : "Highlight not counted as a mistake";
       b.setAttribute("aria-label", label); b.title = label;
       var key = strokeKey(it.st), page = idx;
-      b.addEventListener("click", function (e) { e.stopPropagation(); openNote(page, key); });
+      b.addEventListener("click", function (e) { e.stopPropagation(); openNote(page, key, false); });
       badgesEl.appendChild(b);
     });
   }
 
-  var noteCtx = null, noteDlg = $("#noteDlg");
-  function placeLabel(i, st) {
-    var m = i - OFFSET;
-    if (m < 1 || m > MUSHAF_PAGES) return m < 1 ? "Front pages" : "Back pages";
-    return "Page " + m + " · " + SURAHS[surahAt(m, strokeY(st))][0];
+  /* note editor */
+  var nd = null, noteDlg = $("#noteDlg");
+  function ndColours() {
+    var box = $("#ndColors"); box.innerHTML = "";
+    PALETTE.forEach(function (c) {
+      var b = document.createElement("button"); b.className = "cdot"; b.style.background = c[0];
+      b.setAttribute("aria-label", c[1]); b.setAttribute("aria-pressed", nd && nd.color === c[0] ? "true" : "false");
+      b.addEventListener("click", function () { nd.color = c[0]; $("#ndSw").style.background = c[0]; ndColours(); });
+      box.appendChild(b);
+    });
   }
-  function openNote(i, key) {
+  function syncEditor() {
+    document.querySelectorAll("#ndStyle [data-ns]").forEach(function (b) { b.classList.toggle("on", b.dataset.ns === nd.style); });
+    $("#ndThickRow").hidden = nd.style !== "border";
+    $("#ndOpRow").hidden = nd.style === "none";
+    $("#ndMistakeRow").hidden = nd.style !== "hl";
+    $("#ndThick").value = nd.thick; $("#ndThickL").textContent = nd.thick;
+    $("#ndOp").value = nd.op; $("#ndOpL").textContent = nd.op + "%";
+    var st = findStroke(nd.i, nd.key);
+    $("#ndDelete").hidden = nd.isNew || (nd.style === "hl" && !(st && st.n));
+    $("#ndDelete").textContent = nd.style === "hl" ? "Remove note" : "Delete note";
+    ndColours();
+  }
+  function openNote(i, key, isNew) {
     var st = findStroke(i, key);
     if (!st) return;
-    noteCtx = { i: i, key: key };
+    nd = { i: i, key: key, isNew: !!isNew, style: styleOf(st), color: st.c, openedAt: Date.now(),
+           thick: Math.max(1, Math.min(10, Math.round((st.bw || noteThick * NOTE_BW) / NOTE_BW))),
+           op: Math.max(15, Math.min(100, Math.round((st.a || 0.45) * 100))) };
     $("#ndSw").style.background = st.c;
     $("#ndWhere").textContent = placeLabel(i, st);
-    $("#ndTitle").textContent = st.n ? "Note" : "Add a note";
+    $("#ndTitle").textContent = isNew ? "Add a note" : "Note";
     $("#ndText").value = st.n || "";
-    $("#ndMistakeRow").hidden = !noteSep;
     $("#ndMistake").checked = !st.nm;
-    $("#ndDelete").hidden = !st.n;
+    syncEditor();
     noteDlg.hidden = false;
     if (!st.n) setTimeout(function () { $("#ndText").focus(); }, 60);
   }
-  function closeNote() { noteCtx = null; noteDlg.hidden = true; $("#ndText").blur(); }
-  function commitNote(text, countAsMistake) {
-    if (!noteCtx) return;
-    var i = noteCtx.i, st = findStroke(i, noteCtx.key);
-    if (!st) { closeNote(); return; }
-    var nextNm = noteSep ? !countAsMistake : !!st.nm;
-    if ((st.n || "") === text && !!st.nm === nextNm) { closeNote(); return; }
-    var before = strokes(i).slice();
-    var next = before.map(function (o) {
-      if (o !== st) return o;
-      var c = {}; Object.keys(o).forEach(function (k) { c[k] = o[k]; });
+  function hideNote() {
+    nd = null; noteDlg.hidden = true; $("#ndText").blur();
+    if (tool === "note") setTool(mainTool);   // Add note is one note at a time
+  }
+  function discardNew() { hideNote(); undo(); redoStack = []; updateUndoRedo(); }
+  function cancelNote() { if (nd && nd.isNew) discardNew(); else hideNote(); }
+  function commitNote(removeNote) {
+    if (!nd) return;
+    var i = nd.i, st = findStroke(i, nd.key), text = $("#ndText").value.trim().slice(0, 1000);
+    if (!st) { hideNote(); return; }
+    if (nd.isNew && !text && !removeNote) { discardNew(); return; }
+    var before = strokes(i).slice(), next;
+    if (removeNote && nd.style !== "hl") text = "";
+    if (!text && nd.style !== "hl") {
+      // a border or pin with no note has no reason to stay
+      next = before.filter(function (o) { return o !== st; });
+    } else {
+      if (removeNote) text = "";
+      var c = {}; Object.keys(st).forEach(function (k) { c[k] = st[k]; });
+      c.c = nd.color; c.a = nd.op / 100;
+      if (nd.style === "hl") { delete c.ns; delete c.bw; } else { c.ns = nd.style; if (nd.style === "border") c.bw = nd.thick * NOTE_BW; else delete c.bw; }
       if (text) c.n = text; else delete c.n;
-      if (nextNm) c.nm = true; else delete c.nm;
-      return c;
-    });
-    hist.push({ i: i, before: before, logLen: fixedLog.length }); redoStack = [];
-    setStrokes(i, next);
-    closeNote();
+      if (nd.style === "hl" && !$("#ndMistake").checked) c.nm = true; else delete c.nm;
+      if (!nd.isNew && JSON.stringify(c) === JSON.stringify(st)) { hideNote(); return; }
+      next = before.map(function (o) { return o === st ? c : o; });
+    }
+    if (nd.isNew) {
+      // the new mark is already in the history: replace it rather than adding a second step
+      ann[i] = { s: next, t: Date.now() }; saveLocal(); cloudPage(i);
+    } else {
+      hist.push({ i: i, before: before, logLen: fixedLog.length }); redoStack = [];
+      setStrokes(i, next);
+    }
+    hideNote();
     renderInk(); updateUndoRedo();
   }
-  $("#ndSave").addEventListener("click", function () { commitNote($("#ndText").value.trim().slice(0, 1000), $("#ndMistake").checked); });
-  $("#ndDelete").addEventListener("click", function () { commitNote("", $("#ndMistake").checked); });
-  $("#ndX").addEventListener("click", closeNote);
-  $("#ndCancel").addEventListener("click", closeNote);
-  noteDlg.addEventListener("click", function (e) { if (e.target === noteDlg) closeNote(); });
-  $("#ndText").addEventListener("keydown", function (e) { if (e.key === "Escape") closeNote(); });
-
-  // Notes tool: tap a highlight to open its note (the topmost one where highlights are stacked)
-  ink.addEventListener("click", function (e) {
-    if (tool !== "note") return;
-    var q = pt(e), x = q[0] * cssW, y = q[1] * cssH, list = strokes(idx), ds = [], minD = Infinity, best = -1;
-    for (var i = 0; i < list.length; i++) {
-      var d = list[i].k === "hl" ? edgeDist(list[i], x, y) : Infinity;
-      ds.push(d); if (d <= 16 && d < minD) minD = d;
-    }
-    for (var j = 0; j < ds.length; j++) if (ds[j] <= 16 && ds[j] <= minD + 2) best = j;
-    if (best >= 0) openNote(idx, strokeKey(list[best]));
+  document.querySelectorAll("#ndStyle [data-ns]").forEach(function (b) {
+    b.addEventListener("click", function () { if (!nd) return; nd.style = b.dataset.ns; syncEditor(); });
   });
+  $("#ndThick").addEventListener("input", function (e) { nd.thick = +e.target.value; $("#ndThickL").textContent = nd.thick; });
+  $("#ndOp").addEventListener("input", function (e) { nd.op = +e.target.value; $("#ndOpL").textContent = nd.op + "%"; });
+  $("#ndSave").addEventListener("click", function () { commitNote(false); });
+  $("#ndDelete").addEventListener("click", function () { commitNote(true); });
+  $("#ndX").addEventListener("click", cancelNote);
+  $("#ndCancel").addEventListener("click", cancelNote);
+  // a tap that opens the box is followed by a click that lands on the backdrop: ignore it
+  noteDlg.addEventListener("click", function (e) { if (e.target === noteDlg && nd && Date.now() - nd.openedAt > 500) cancelNote(); });
+  $("#ndText").addEventListener("keydown", function (e) { if (e.key === "Escape") cancelNote(); });
 
   /* all notes */
   var notesSheet = $("#notes");
@@ -1159,7 +1323,7 @@ footer {
     var list = $("#notesList"); list.innerHTML = "";
     if (!items.length) {
       var e = document.createElement("p"); e.className = "empty";
-      e.textContent = all ? "No notes match your search." : "No notes yet. Choose Notes as the drawing tool, then tap a highlight to write one.";
+      e.textContent = all ? "No notes match your search." : "No notes yet. Tap Add note above the bottom bar, then tap or drag on a line.";
       list.appendChild(e); return;
     }
     items.forEach(function (it) {
@@ -1167,17 +1331,20 @@ footer {
       b.innerHTML = '<div class="l1"><span class="dot"></span><span class="nm"></span><span class="pp"></span></div><span class="snip"></span>';
       b.querySelector(".dot").style.background = it.st.c;
       b.querySelector(".nm").textContent = placeLabel(it.i, it.st);
-      b.querySelector(".pp").textContent = noteSep && it.st.nm ? "not a mistake" : "";
+      var sty = styleOf(it.st);
+      b.querySelector(".pp").textContent = sty === "border" ? "Border" : (sty === "none" ? "Pin" : (it.st.nm ? "Highlight · not a mistake" : "Highlight"));
       b.querySelector(".snip").textContent = it.st.n || "No note text";
       var key = strokeKey(it.st), page = it.i;
       b.addEventListener("click", function () {
         notesSheet.classList.remove("open"); closeMenu();
-        Promise.resolve(show(page)).then(function () { openNote(page, key); });
+        Promise.resolve(show(page)).then(function () { openNote(page, key, false); });
       });
       list.appendChild(b);
     });
   }
-  $("#notesBtn").addEventListener("click", function () { $("#notesSearch").value = ""; renderNotes(); notesSheet.classList.add("open"); notesSheet.scrollTop = 0; });
+  function openNotesList() { $("#notesSearch").value = ""; renderNotes(); notesSheet.classList.add("open"); notesSheet.scrollTop = 0; }
+  $("#notesBtn").addEventListener("click", openNotesList);
+  $("#notesTop").addEventListener("click", openNotesList);
   $("#notesBack").addEventListener("click", function () { notesSheet.classList.remove("open"); });
   $("#notesSearch").addEventListener("input", renderNotes);
 
@@ -1197,16 +1364,19 @@ footer {
     mb.setAttribute("aria-label", NAMES[mainTool]); mb.title = NAMES[mainTool];
     mb.classList.toggle("on", t === mainTool);
     $("#eraseBtn").classList.toggle("on", t === "erase");
-    var away = mainTool === "move" || mainTool === "recolour" || mainTool === "note";
+    var away = mainTool === "move" || mainTool === "recolour";
     $("#backHl").hidden = !away;
-    $("#backMode").textContent = mainTool === "move" ? "Move mode" : (mainTool === "note" ? "Notes · tap a highlight" : "Recolour mode");
+    $("#backMode").textContent = mainTool === "move" ? "Move mode" : "Recolour mode";
+    var an = $("#addNote"); an.classList.toggle("on", t === "note"); an.setAttribute("aria-pressed", t === "note" ? "true" : "false");
+    $("#addNoteText").textContent = t === "note" ? "Tap or drag on a line" : "Add note";
     updateNag();
     ink.style.touchAction = panTool(t) ? "auto" : "none";
-    ink.style.cursor = t === "move" ? "default" : (t === "note" ? "pointer" : (t === "erase" ? "cell" : "crosshair"));
+    ink.style.cursor = t === "move" ? "default" : (t === "erase" ? "cell" : "crosshair");
   }
   $("#mainTool").addEventListener("click", function () { setTool(mainTool); });
   $("#backHl").addEventListener("click", function () { mainTool = "highlight"; savePrefs(); setTool("highlight"); syncMenu(); });
   $("#eraseBtn").addEventListener("click", function () { setTool("erase"); });
+  $("#addNote").addEventListener("click", function () { setTool(tool === "note" ? mainTool : "note"); });
 
   function buildSwatches() {
     var box = $("#swatches");
@@ -1322,8 +1492,10 @@ footer {
     $("#straight").checked = straight;
     $("#snapLines").checked = snapLines; $("#fitLine").checked = fitLine;
     $("#snapLines").disabled = !straight; $("#fitLine").disabled = !straight || !snapLines;
-    $("#noteSep").checked = noteSep;
-    $("#noteHint").hidden = mainTool !== "note";
+    document.querySelectorAll("[data-nstyle]").forEach(function (b) { b.classList.toggle("on", b.dataset.nstyle === noteStyle); });
+    $("#noteThick").value = noteThick; $("#ntLabel").textContent = noteThick; $("#noteThick").disabled = noteStyle !== "border";
+    $("#noteOp").value = noteOp; $("#noLabel").textContent = noteOp + "%"; $("#noteOp").disabled = noteStyle === "none";
+    renderNotePreview();
     $("#swapTurn").checked = swapTurn;
     $("#zoomLabel").textContent = Math.round(zoom * 100) + "%";
     buildPalette();
@@ -1338,7 +1510,28 @@ footer {
   $("#straight").addEventListener("change", function (e) { straight = e.target.checked; savePrefs(); syncMenu(); });
   $("#snapLines").addEventListener("change", function (e) { snapLines = e.target.checked; savePrefs(); syncMenu(); });
   $("#fitLine").addEventListener("change", function (e) { fitLine = e.target.checked; savePrefs(); });
-  $("#noteSep").addEventListener("change", function (e) { noteSep = e.target.checked; savePrefs(); renderInk(); });
+  document.querySelectorAll("[data-nstyle]").forEach(function (b) {
+    b.addEventListener("click", function () { noteStyle = b.dataset.nstyle; savePrefs(); syncMenu(); });
+  });
+  $("#noteThick").addEventListener("input", function (e) { noteThick = +e.target.value; $("#ntLabel").textContent = noteThick; renderNotePreview(); });
+  $("#noteOp").addEventListener("input", function (e) { noteOp = +e.target.value; $("#noLabel").textContent = noteOp + "%"; renderNotePreview(); });
+  ["#noteThick", "#noteOp"].forEach(function (q) { $(q).addEventListener("change", savePrefs); });
+  function renderNotePreview() {
+    var mk = $("#pvMark");
+    mk.style.border = "0"; mk.style.background = "none"; mk.style.opacity = "1";
+    if (noteStyle === "border") { mk.style.border = (0.6 + noteThick * 0.7).toFixed(1) + "px solid " + color; mk.style.opacity = noteOp / 100; }
+    else if (noteStyle === "hl") { mk.style.background = color; mk.style.opacity = noteOp / 100; }
+  }
+  // settings groups remember whether they were open
+  (function () {
+    var st = {}; try { st = JSON.parse(lsGet("mushaf-notes:v2:groups") || "{}") || {}; } catch (e) {}
+    document.querySelectorAll("details.grp").forEach(function (d) {
+      if (st[d.id]) d.open = true;
+      d.addEventListener("toggle", function () { st[d.id] = d.open; lsSet("mushaf-notes:v2:groups", JSON.stringify(st)); });
+    });
+  })();
+  $("#qStats").addEventListener("click", function () { closeMenu(); openStats(); });
+  $("#qNotes").addEventListener("click", function () { openNotesList(); });
   $("#swapTurn").addEventListener("change", function (e) { swapTurn = e.target.checked; savePrefs(); updateTurns(); });
 
   function buildPalette() {
@@ -1402,8 +1595,8 @@ footer {
   var clearTimer = null;
   $("#clearBtn").addEventListener("click", function () {
     var b = $("#clearBtn");
-    if (!strokes(idx).length) { b.textContent = "This page has no notes"; setTimeout(function () { b.textContent = "Clear all notes on this page"; }, 1800); return; }
-    if (!clearTimer) { b.textContent = "Tap again to clear"; clearTimer = setTimeout(function () { b.textContent = "Clear all notes on this page"; clearTimer = null; }, 3000); return; }
+    if (!strokes(idx).length) { b.textContent = "This page has no notes"; setTimeout(function () { b.textContent = "Clear all marks on this page"; }, 1800); return; }
+    if (!clearTimer) { b.textContent = "Tap again to clear"; clearTimer = setTimeout(function () { b.textContent = "Clear all marks on this page"; clearTimer = null; }, 3000); return; }
     clearTimeout(clearTimer); clearTimer = null;
     hist.push({ i: idx, before: strokes(idx).slice(), logLen: fixedLog.length });
     redoStack = [];
@@ -1412,7 +1605,7 @@ footer {
     setStrokes(idx, []);
     renderInk();
     b.textContent = "Cleared";
-    setTimeout(function () { b.textContent = "Clear all notes on this page"; }, 1800);
+    setTimeout(function () { b.textContent = "Clear all marks on this page"; }, 1800);
   });
 
   /* ---------- stats ---------- */
@@ -1476,9 +1669,9 @@ footer {
     Object.keys(ann).forEach(function (k) {
       var m = +k - OFFSET;
       if (m < 1 || m > MUSHAF_PAGES) return;
-      var hls = strokes(+k).filter(function (st) { return st.k === "hl"; });
+      var hls = strokes(+k).filter(realHl);
       hls.forEach(function (st) { used[st.c] = (used[st.c] || 0) + 1; });
-      groupHighlights(hls.filter(function (st) { return !(noteSep && st.nm); })).forEach(function (g) {
+      groupHighlights(hls.filter(function (st) { return !st.nm; })).forEach(function (g) {
         // one mistake: it counts in a period if it was marked (or re-marked) then,
         // and is worth the highest colour value among its highlights
         var latest = 0; g.forEach(function (st) { latest = Math.max(latest, st.d || 0); });
@@ -2079,7 +2272,9 @@ footer {
     if (typeof p.straight === "boolean") straight = p.straight;
     if (typeof p.snapLines === "boolean") snapLines = p.snapLines;
     if (typeof p.fitLine === "boolean") fitLine = p.fitLine;
-    if (typeof p.noteSep === "boolean") noteSep = p.noteSep;
+    if (p.noteStyle === "border" || p.noteStyle === "hl" || p.noteStyle === "none") noteStyle = p.noteStyle;
+    if (p.noteThick >= 1 && p.noteThick <= 10) noteThick = p.noteThick;
+    if (p.noteOp >= 15 && p.noteOp <= 100) noteOp = p.noteOp;
     if (typeof p.swapTurn === "boolean") swapTurn = p.swapTurn;
     if (Array.isArray(p.barColors) && p.barColors.length) barColors = p.barColors;
     if (p.weights && typeof p.weights === "object") weights = p.weights;

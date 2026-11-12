@@ -105,7 +105,7 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
 
 /* notes */
 #badges { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
-.nb { position: absolute; width: 26px; height: 26px; min-height: 0; padding: 0; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: auto; display: flex; align-items: center; justify-content: center; background: #fff; color: #17211c; border: 2px solid #888; box-shadow: 0 1px 5px rgba(0,0,0,.4); }
+.nb { position: absolute; width: 26px; height: 26px; min-height: 0; padding: 0; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: auto; display: flex; align-items: center; justify-content: center; background: #fff; color: #17211c; border: 2px solid #888; box-shadow: 0 1px 5px rgba(0,0,0,.4); opacity: .45; }
 .nb.nm { border-style: dashed; color: #5f6b65; }
 .dlg { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45); display: flex; align-items: flex-start; justify-content: center; padding: calc(56px + env(safe-area-inset-top, 0px)) 12px 12px; }
 .dlg .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; width: min(520px, 100%); display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; }
@@ -113,7 +113,7 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
 .dlg .nsw { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line); flex: none; }
 #toolSeg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
 #tidyBtn { white-space: normal; text-align: left; line-height: 1.25; }
-#noteStyleSeg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+#noteStyleSeg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
 #noteStyleSeg button { border-radius: 8px !important; border-left-width: 1px !important; padding: 6px 4px; }
 #toolSeg button { border-radius: 8px !important; border-left-width: 1px !important; }
 .search { width: 100%; box-sizing: border-box; font-size: 16px; padding: 9px 10px; min-height: 42px; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); color: var(--ink); }
@@ -364,13 +364,12 @@ footer {
           <div id="noteStyleSeg" role="group" aria-label="How a note is marked">
             <button data-nstyle="border">Highlight border</button>
             <button data-nstyle="hl">Actual highlight</button>
-            <button data-nstyle="none">Neither</button>
           </div>
-          <p>A highlight border does not count as a mistake. An actual highlight counts like any highlight, and you can untick that in the note. Neither leaves only the note icon.</p>
+          <p>A highlight border does not count as a mistake. An actual highlight counts like any highlight, and you can untick that in the note. It uses your normal highlighter opacity and size from Drawing, so it looks just like one.</p>
         </div>
         <div class="sub">
           <label class="sl"><span>Border thickness</span><input id="noteThick" type="range" min="1" max="10" value="3"><b id="ntLabel">3</b></label>
-          <label class="sl"><span>Opacity</span><input id="noteOp" type="range" min="15" max="100" value="80"><b id="noLabel">80%</b></label>
+          <label class="sl"><span>Border opacity</span><input id="noteOp" type="range" min="15" max="100" value="80"><b id="noLabel">80%</b></label>
           <div id="notePrev" aria-hidden="true"><span class="pvwrap">Sample line<i id="pvMark"></i></span></div>
         </div>
         <div class="row"><button id="notesBtn">See all my notes</button></div>
@@ -536,7 +535,6 @@ footer {
     <div class="seg" id="ndStyle" role="group" aria-label="How the note is marked on the page">
       <button data-ns="border">Highlight border</button>
       <button data-ns="hl">Highlight</button>
-      <button data-ns="none">Neither</button>
     </div>
     <label class="sl" id="ndThickRow"><span>Border</span><input id="ndThick" type="range" min="1" max="10"><b id="ndThickL"></b></label>
     <label class="sl" id="ndOpRow"><span>Opacity</span><input id="ndOp" type="range" min="15" max="100"><b id="ndOpL"></b></label>
@@ -691,7 +689,7 @@ footer {
       if (typeof p.showZero === "boolean") showZero = p.showZero;
       if (typeof p.snapLines === "boolean") snapLines = p.snapLines;
       if (typeof p.fitLine === "boolean") fitLine = p.fitLine;
-      if (p.noteStyle === "border" || p.noteStyle === "hl" || p.noteStyle === "none") noteStyle = p.noteStyle;
+      if (p.noteStyle === "border" || p.noteStyle === "hl" || p.noteStyle === "none") noteStyle = p.noteStyle === "none" ? "border" : p.noteStyle;
       if (p.noteThick >= 1 && p.noteThick <= 10) noteThick = p.noteThick;
       if (p.noteOp >= 15 && p.noteOp <= 100) noteOp = p.noteOp;
     } catch (e) {}
@@ -893,8 +891,7 @@ footer {
     ctx.save();
     ctx.globalAlpha = s.a; ctx.strokeStyle = s.c; ctx.fillStyle = s.c;
     var lw = s.w * cssW;
-    if (s.ns === "none") { ctx.restore(); return; }
-    if (s.ns === "border") {
+    if (s.ns === "border" || s.ns === "none") {   // "none" was an old option: it now shows as a border
       var bx0 = 1, bx1 = 0;
       for (var bi = 0; bi < p.length; bi += 2) { bx0 = Math.min(bx0, p[bi]); bx1 = Math.max(bx1, p[bi]); }
       ctx.lineWidth = Math.max(1, (s.bw || 3 * NOTE_BW) * cssW); ctx.lineJoin = "round";
@@ -1034,7 +1031,7 @@ footer {
     if (tool === "recolour") { recolourAt(q); return; }
     noteDraw = tool === "note"; noteDown = q;
     var hl = tool === "highlight" || noteDraw;
-    cur = { k: hl ? "hl" : "pen", c: color, a: noteDraw ? noteOp / 100 : opacity / 100, w: hl ? sizes.hl * 0.01 : sizes.pen * 0.002, p: [q[0], q[1]], d: Date.now() };
+    cur = { k: hl ? "hl" : "pen", c: color, a: (noteDraw && noteStyle !== "hl" ? noteOp : opacity) / 100, w: hl ? sizes.hl * 0.01 : sizes.pen * 0.002, p: [q[0], q[1]], d: Date.now() };
     if (noteDraw && noteStyle !== "hl") { cur.ns = noteStyle; if (noteStyle === "border") cur.bw = noteThick * NOTE_BW; }
     if (hl && (noteDraw ? snapLines : snapOn())) {
       var sn = lineSnap(idx, q[1], img.naturalHeight);
@@ -1180,7 +1177,7 @@ footer {
     for (var k = 0; k < l.length; k++) if (l[k].k === "hl" && strokeKey(l[k]) === key) return l[k];
     return null;
   }
-  function styleOf(st) { return st.ns === "border" || st.ns === "none" ? st.ns : "hl"; }
+  function styleOf(st) { return st.ns === "border" || st.ns === "none" ? "border" : "hl"; }
   function placeLabel(i, st) {
     var m = i - OFFSET;
     if (m < 1 || m > MUSHAF_PAGES) return m < 1 ? "Front pages" : "Back pages";
@@ -1235,7 +1232,6 @@ footer {
   function syncEditor() {
     document.querySelectorAll("#ndStyle [data-ns]").forEach(function (b) { b.classList.toggle("on", b.dataset.ns === nd.style); });
     $("#ndThickRow").hidden = nd.style !== "border";
-    $("#ndOpRow").hidden = nd.style === "none";
     $("#ndMistakeRow").hidden = nd.style !== "hl";
     $("#ndThick").value = nd.thick; $("#ndThickL").textContent = nd.thick;
     $("#ndOp").value = nd.op; $("#ndOpL").textContent = nd.op + "%";
@@ -1279,7 +1275,7 @@ footer {
       if (removeNote) text = "";
       var c = {}; Object.keys(st).forEach(function (k) { c[k] = st[k]; });
       c.c = nd.color; c.a = nd.op / 100;
-      if (nd.style === "hl") { delete c.ns; delete c.bw; } else { c.ns = nd.style; if (nd.style === "border") c.bw = nd.thick * NOTE_BW; else delete c.bw; }
+      if (nd.style === "hl") { delete c.ns; delete c.bw; } else { c.ns = "border"; c.bw = nd.thick * NOTE_BW; }
       if (text) c.n = text; else delete c.n;
       if (nd.style === "hl" && !$("#ndMistake").checked) c.nm = true; else delete c.nm;
       if (!nd.isNew && JSON.stringify(c) === JSON.stringify(st)) { hideNote(); return; }
@@ -1296,10 +1292,15 @@ footer {
     renderInk(); updateUndoRedo();
   }
   document.querySelectorAll("#ndStyle [data-ns]").forEach(function (b) {
-    b.addEventListener("click", function () { if (!nd) return; nd.style = b.dataset.ns; syncEditor(); });
+    b.addEventListener("click", function () {
+      if (!nd) return;
+      nd.style = b.dataset.ns;
+      if (!nd.opTouched) nd.op = Math.max(15, Math.min(100, nd.style === "hl" ? opacity : noteOp));   // each style starts from its own default
+      syncEditor();
+    });
   });
   $("#ndThick").addEventListener("input", function (e) { nd.thick = +e.target.value; $("#ndThickL").textContent = nd.thick; });
-  $("#ndOp").addEventListener("input", function (e) { nd.op = +e.target.value; $("#ndOpL").textContent = nd.op + "%"; });
+  $("#ndOp").addEventListener("input", function (e) { nd.opTouched = true; nd.op = +e.target.value; $("#ndOpL").textContent = nd.op + "%"; });
   $("#ndSave").addEventListener("click", function () { commitNote(false); });
   $("#ndDelete").addEventListener("click", function () { commitNote(true); });
   $("#ndX").addEventListener("click", cancelNote);
@@ -1332,7 +1333,7 @@ footer {
       b.querySelector(".dot").style.background = it.st.c;
       b.querySelector(".nm").textContent = placeLabel(it.i, it.st);
       var sty = styleOf(it.st);
-      b.querySelector(".pp").textContent = sty === "border" ? "Border" : (sty === "none" ? "Pin" : (it.st.nm ? "Highlight · not a mistake" : "Highlight"));
+      b.querySelector(".pp").textContent = sty === "border" ? "Border" : (it.st.nm ? "Highlight · not a mistake" : "Highlight");
       b.querySelector(".snip").textContent = it.st.n || "No note text";
       var key = strokeKey(it.st), page = it.i;
       b.addEventListener("click", function () {
@@ -1494,7 +1495,7 @@ footer {
     $("#snapLines").disabled = !straight; $("#fitLine").disabled = !straight || !snapLines;
     document.querySelectorAll("[data-nstyle]").forEach(function (b) { b.classList.toggle("on", b.dataset.nstyle === noteStyle); });
     $("#noteThick").value = noteThick; $("#ntLabel").textContent = noteThick; $("#noteThick").disabled = noteStyle !== "border";
-    $("#noteOp").value = noteOp; $("#noLabel").textContent = noteOp + "%"; $("#noteOp").disabled = noteStyle === "none";
+    $("#noteOp").value = noteOp; $("#noLabel").textContent = noteOp + "%"; $("#noteOp").disabled = noteStyle !== "border";
     renderNotePreview();
     $("#swapTurn").checked = swapTurn;
     $("#zoomLabel").textContent = Math.round(zoom * 100) + "%";
@@ -1520,7 +1521,7 @@ footer {
     var mk = $("#pvMark");
     mk.style.border = "0"; mk.style.background = "none"; mk.style.opacity = "1";
     if (noteStyle === "border") { mk.style.border = (0.6 + noteThick * 0.7).toFixed(1) + "px solid " + color; mk.style.opacity = noteOp / 100; }
-    else if (noteStyle === "hl") { mk.style.background = color; mk.style.opacity = noteOp / 100; }
+    else if (noteStyle === "hl") { mk.style.background = color; mk.style.opacity = opacity / 100; }
   }
   // settings groups remember whether they were open
   (function () {
@@ -2272,7 +2273,7 @@ footer {
     if (typeof p.straight === "boolean") straight = p.straight;
     if (typeof p.snapLines === "boolean") snapLines = p.snapLines;
     if (typeof p.fitLine === "boolean") fitLine = p.fitLine;
-    if (p.noteStyle === "border" || p.noteStyle === "hl" || p.noteStyle === "none") noteStyle = p.noteStyle;
+    if (p.noteStyle === "border" || p.noteStyle === "hl" || p.noteStyle === "none") noteStyle = p.noteStyle === "none" ? "border" : p.noteStyle;
     if (p.noteThick >= 1 && p.noteThick <= 10) noteThick = p.noteThick;
     if (p.noteOp >= 15 && p.noteOp <= 100) noteOp = p.noteOp;
     if (typeof p.swapTurn === "boolean") swapTurn = p.swapTurn;

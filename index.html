@@ -105,10 +105,11 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
 
 /* notes */
 #badges { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
-.nb { position: absolute; width: 26px; height: 26px; min-height: 0; padding: 0; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: auto; display: flex; align-items: center; justify-content: center; background: #fff; color: #17211c; border: 2px solid #888; box-shadow: 0 1px 5px rgba(0,0,0,.4); opacity: .45; }
+.nb { position: absolute; width: 13px; height: 13px; min-height: 0; padding: 0; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: auto; display: flex; align-items: center; justify-content: center; background: #fff; color: #17211c; border: 1px solid #888; box-shadow: 0 1px 3px rgba(0,0,0,.4); opacity: .45; }
+.nb::before { content: ""; position: absolute; inset: -9px; }   /* the icon is small, the tap area is not */
 .nb.nm { border-style: dashed; color: #5f6b65; }
-.nb.mn { font-size: 16px; font-weight: 700; line-height: 1; }
-.nb.lk::after { content: ""; position: absolute; right: -4px; bottom: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid #fff; }
+.nb.mn { font-size: 8px; font-weight: 700; line-height: 1; }
+.nb.lk::after { content: ""; position: absolute; right: -2px; bottom: -2px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); border: 1px solid #fff; }
 .dlg { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.45); display: flex; align-items: flex-start; justify-content: center; padding: calc(56px + env(safe-area-inset-top, 0px)) 12px 12px; }
 .dlg .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; width: min(520px, 100%); display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; }
 .dlg textarea { width: 100%; box-sizing: border-box; min-height: 120px; font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--btn); color: var(--ink); resize: vertical; }
@@ -196,6 +197,40 @@ header .of { color: var(--muted); font-size: 13px; white-space: nowrap; }
 #nag[hidden] { display: none; }
 #nag button { min-height: 34px; padding: 4px 12px; border-radius: 999px; }
 #nag .x { background: transparent; border-color: transparent; padding: 4px 10px; }
+
+/* read-only view of a note or meaning */
+.dwhere { margin: 0; color: var(--muted); font-size: 13.5px; }
+.vwtext { white-space: pre-wrap; font-size: 17px; line-height: 1.5; max-height: 38vh; overflow: auto; background: var(--btn); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; word-break: break-word; }
+.vwtext.none { color: var(--muted); font-style: italic; }
+.vwtext.ar { font-size: 24px; line-height: 1.8; font-family: "Noto Naskh Arabic", "Amiri", "Traditional Arabic", "Geeza Pro", system-ui, serif; }
+.vwlab { font-size: 12.5px; font-weight: 600; color: var(--muted); margin: 2px 0 -4px; }
+#vwMean, #vwLinks { display: flex; flex-direction: column; gap: 8px; }
+#vwLinked { display: flex; flex-direction: column; gap: 6px; }
+
+/* bookmarks */
+#bmTop { position: absolute; z-index: 6; right: calc(10px + env(safe-area-inset-right, 0px)); top: 108px; width: 40px; height: 40px; min-height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: color-mix(in srgb, var(--panel) 88%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: 0 1px 6px var(--shadow); }
+#bmTop.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+#ribbon { position: absolute; top: 0; right: 7%; width: 22px; height: 38px; min-height: 0; padding: 0; background: none; border: 0; z-index: 4; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
+.bmrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--btn); }
+.bmrow .dt { flex: 1; min-width: 0; }
+.bmrow .dt b { display: block; font-size: 14px; }
+.bmrow .dt span { font-size: 13px; color: var(--muted); }
+.bmrow .acts { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+.bmrow.has .acts { flex-basis: 100%; justify-content: flex-start; }
+.bmrow .acts button { min-height: 36px; padding: 4px 10px; }
+
+/* flashcards */
+#cards { z-index: 31; }
+.fcprog { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 14px; }
+.fccard { border: 1px solid var(--line); border-radius: 14px; background: var(--btn); padding: 18px 16px; min-height: 210px; display: flex; flex-direction: column; gap: 14px; align-items: center; justify-content: center; text-align: center; }
+.fctext { font-size: 22px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; width: 100%; }
+.fctext.ar { font-size: 34px; line-height: 1.9; font-family: "Noto Naskh Arabic", "Amiri", "Traditional Arabic", "Geeza Pro", system-ui, serif; }
+.fcsep { width: 100%; border: 0; border-top: 1px solid var(--line); margin: 0; }
+.fcwhere { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.fcbig { min-height: 54px; font-weight: 600; font-size: 16px; width: 100%; }
+.fcgrades { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fcgrades button { min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 17px; }
+.fcgrades small { opacity: .75; font-size: 12.5px; font-weight: 400; }
 
 /* bottom bar */
 footer {
@@ -324,6 +359,8 @@ footer {
     <button id="redoBtn" class="ib" aria-label="Redo" title="Redo"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 14l5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
   </div>
 
+  <button id="bmTop" title="Bookmarks" aria-label="Bookmarks"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21V3z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg></button>
+
   <div id="floaters">
     <div class="fleft">
     <button id="addNote" aria-pressed="false"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="17" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v3M10.5 4h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span id="addNoteText">Add note</span></button>
@@ -352,6 +389,8 @@ footer {
     <div class="quick">
       <button id="qStats">Mistake stats</button>
       <button id="qNotes">All notes</button>
+      <button id="qBm">Bookmarks</button>
+      <button id="qCards">Flashcards</button>
     </div>
 
     <details class="grp" id="g-draw">
@@ -428,7 +467,7 @@ footer {
             <label class="sl"><span>Border opacity</span><input id="meanOp" type="range" min="15" max="100" value="80"><b id="moLabel">80%</b></label>
             <div id="mPrev" aria-hidden="true"><span class="pvwrap">Sample line<i id="mPvMark"></i></span></div>
           </div>
-          <div class="row"><button id="meanListBtn">See all my meanings</button></div>
+          <div class="row"><button id="meanListBtn">See all my meanings</button><button id="fcBtn">Flashcards</button></div>
         </div>
       </div>
     </details>
@@ -542,7 +581,7 @@ footer {
       <p>Per page is the score divided by the surah’s length in pages, so long and short surahs can be compared fairly. Surahs shorter than a page are marked “short”, because a single mistake moves them a lot. Tap a surah to open it.</p>
       <p>Erasing a highlight within 20 minutes removes it completely, as a quick correction. Erasing it later keeps it in these stats as a fixed mistake.</p>
       <p>The eraser removes only the top highlight when several are stacked on the same mistake. Tap again to remove the next one down. Removing a repeat while an earlier highlight still marks the mistake does not count as fixing it.</p>
-      <p>Highlighting over an existing highlight marks the same mistake again, so they count as one “repeated” mistake. It counts in Last 30 days or Last 7 days if you re-marked it then, and it is worth the highest colour value among its highlights.</p>
+      <p>Highlighting over an existing highlight marks the same mistake again. It is still counted as one mistake, never twice. It shows in Last 30 days or Last 7 days if you re-marked it then, and it is worth the highest colour value among its highlights.</p>
     </section>
 
     <section>
@@ -618,6 +657,67 @@ footer {
     </details>
     <p id="ndMsg" role="alert"></p>
     <div class="row"><button id="ndSave" class="primary">Save</button><button id="ndDelete">Delete note</button><span class="grow"></span><button id="ndCancel">Cancel</button></div>
+  </div>
+</div>
+
+<div id="viewDlg" class="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="vwTitle">
+  <div class="box">
+    <div class="row"><span class="nsw" id="vwSw"></span><b id="vwTitle">Note</b><span class="grow"></span><button id="vwX" aria-label="Close">✕</button></div>
+    <p class="dwhere" id="vwWhere"></p>
+    <div id="vwNoteBox"><div class="vwtext" id="vwNote"></div></div>
+    <div id="vwMean" hidden>
+      <div class="vwlab">English</div><div class="vwtext" id="vwEn"></div>
+      <div class="vwlab">Arabic</div><div class="vwtext ar" id="vwAr" dir="rtl" lang="ar"></div>
+    </div>
+    <div id="vwLinks" hidden><div class="vwlab" id="vwLinkHead"></div><div id="vwLinked"></div></div>
+    <div class="row"><button id="vwEdit" class="primary">Edit note</button><button id="vwRemove">Remove note</button><span class="grow"></span><button id="vwClose">Close</button></div>
+  </div>
+</div>
+
+<div id="bmDlg" class="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="bmTitle">
+  <div class="box">
+    <div class="row"><b id="bmTitle">Bookmarks</b><span class="grow"></span><button id="bmX" aria-label="Close">✕</button></div>
+    <p class="dwhere">Place up to four bookmarks. They follow you between devices when you are signed in.</p>
+    <p class="dwhere" id="bmHere"></p>
+    <div id="bmList" style="display:flex;flex-direction:column;gap:8px"></div>
+    <p id="bmMsg" class="dwhere" role="status" style="color:#c0392b"></p>
+    <div class="row"><span class="grow"></span><button id="bmClose">Close</button></div>
+  </div>
+</div>
+
+<div id="cards" class="sheet" role="dialog" aria-modal="true" aria-labelledby="fcTitle">
+  <div class="top">
+    <h2 id="fcTitle">Flashcards<span class="where" id="fcSub">From your meanings</span></h2>
+    <button id="fcClose" class="primary">Close</button>
+  </div>
+  <div class="body">
+    <section id="fcHome">
+      <div class="cards">
+        <div class="card2"><b id="fcDue">0</b><span>Due now</span></div>
+        <div class="card2"><b id="fcNewN">0</b><span>New today</span></div>
+        <div class="card2"><b id="fcTotal">0</b><span>Cards</span></div>
+      </div>
+      <p class="note" id="fcMsg" role="status"></p>
+      <button id="fcStart" class="primary fcbig">Start</button>
+      <p>Each meaning with both English and Arabic filled in makes two cards: English to Arabic, and Arabic to English. Up to 5 new cards a day are added. Tap <b>Forgot</b> and the card comes back soon in the same session. Tap <b>Got it</b> and it comes back after a longer and longer gap.</p>
+    </section>
+    <section id="fcStudy" hidden>
+      <div class="fcprog"><span id="fcProg"></span><button id="fcEnd">Finish</button></div>
+      <div class="fccard">
+        <span class="tag" id="fcDir"></span>
+        <div class="fctext" id="fcFront"></div>
+        <div id="fcAns" hidden style="width:100%;display:flex;flex-direction:column;gap:14px;align-items:center">
+          <hr class="fcsep">
+          <div class="fctext" id="fcBack"></div>
+          <div class="fcwhere"><span id="fcWhere"></span><button id="fcGo" class="linkbtn">Go to page</button></div>
+        </div>
+      </div>
+      <button id="fcShow" class="primary fcbig">Show answer</button>
+      <div class="fcgrades" id="fcGrades" hidden>
+        <button id="fcForgot"><b>Forgot</b><small id="fcForgotIv"></small></button>
+        <button id="fcGot" class="primary"><b>Got it</b><small id="fcGotIv"></small></button>
+      </div>
+    </section>
   </div>
 </div>
 
@@ -724,6 +824,7 @@ footer {
   var weights = {}, statPeriod = 0, statSort = "rate", groupJ30 = false, showZero = false;
   var snapLines = true, fitLine = true, noteStyle = "border", noteThick = 3, noteOp = 80;
   var meanOn = true, meanStyle = "border", meanThick = 3, meanOp = 80;
+  var bm = [0, 0, 0, 0], fc = {}, fcNew = { d: "", n: 0 };   // bookmarks (page index, 0 = empty), flashcard schedule, new cards started today
   var ann = {}, hist = [], redoStack = [];
   var cur = null, snap = null, changed = false, drawing = false;
   var showId = 0;
@@ -746,6 +847,15 @@ footer {
     });
     if (added) saveLog();
   }
+  function cleanBm(a) { var o = [0, 0, 0, 0]; if (Array.isArray(a)) for (var k = 0; k < 4; k++) { var v = +a[k]; if (v >= FIRST && v <= LAST) o[k] = v | 0; } return o; }
+  function cleanFc(o) {
+    var out = {};
+    if (o && typeof o === "object") Object.keys(o).forEach(function (k) { var r = o[k]; if (r && typeof r.d === "number" && typeof r.s === "number") out[k] = { s: Math.max(0, r.s | 0), d: r.d, l: r.l | 0, r: +r.r || 0 }; });
+    return out;
+  }
+  function cleanFcNew(o) { return o && typeof o.d === "string" && o.n >= 0 ? { d: o.d, n: o.n | 0 } : { d: "", n: 0 }; }
+  function mergeFc(remote) { var rc = cleanFc(remote); Object.keys(rc).forEach(function (k) { if (!fc[k] || rc[k].r > (fc[k].r || 0)) fc[k] = rc[k]; }); }
+  function mergeFcNew(o) { var n = cleanFcNew(o); if (n.d > fcNew.d) fcNew = n; else if (n.d === fcNew.d) fcNew.n = Math.max(fcNew.n, n.n); }
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
   (function () { var r = lsGet(LS_NOTES); if (r) { try { ann = JSON.parse(r) || {}; } catch (e) { ann = {}; } } })();
@@ -774,12 +884,15 @@ footer {
       if (p.meanStyle === "border" || p.meanStyle === "hl") meanStyle = p.meanStyle;
       if (p.meanThick >= 1 && p.meanThick <= 10) meanThick = p.meanThick;
       if (p.meanOp >= 15 && p.meanOp <= 100) meanOp = p.meanOp;
+      if (p.bm) bm = cleanBm(p.bm);
+      if (p.fc) fc = cleanFc(p.fc);
+      if (p.fcNew) fcNew = cleanFcNew(p.fcNew);
     } catch (e) {}
   })();
   if (mainTool === "note" || mainTool === "meaning") mainTool = "highlight";
   tool = mainTool;
   function savePrefs(fromCloud) {
-    lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, mainTool: mainTool, barColors: barColors, weights: weights, statPeriod: statPeriod, statSort: statSort, groupJ30: groupJ30, showZero: showZero, snapLines: snapLines, fitLine: fitLine, noteStyle: noteStyle, noteThick: noteThick, noteOp: noteOp, meanOn: meanOn, meanStyle: meanStyle, meanThick: meanThick, meanOp: meanOp }));
+    lsSet(LS_PREFS, JSON.stringify({ color: color, opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, mainTool: mainTool, barColors: barColors, weights: weights, statPeriod: statPeriod, statSort: statSort, groupJ30: groupJ30, showZero: showZero, snapLines: snapLines, fitLine: fitLine, noteStyle: noteStyle, noteThick: noteThick, noteOp: noteOp, meanOn: meanOn, meanStyle: meanStyle, meanThick: meanThick, meanOp: meanOp, bm: bm, fc: fc, fcNew: fcNew }));
     // settings that follow you between devices
     var shared = JSON.stringify(sharedPrefs());
     if (shared !== lastShared) {
@@ -789,7 +902,7 @@ footer {
   }
   var LS_PREFS_T = "mushaf-notes:v2:prefsTime";
   var prefsT = parseInt(lsGet(LS_PREFS_T), 10) || 0;
-  function sharedPrefs() { return { opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, barColors: barColors, weights: weights, groupJ30: groupJ30, showZero: showZero, statSort: statSort, snapLines: snapLines, fitLine: fitLine, noteStyle: noteStyle, noteThick: noteThick, noteOp: noteOp, meanOn: meanOn, meanStyle: meanStyle, meanThick: meanThick, meanOp: meanOp }; }
+  function sharedPrefs() { return { opacity: opacity, sizes: sizes, straight: straight, swapTurn: swapTurn, barColors: barColors, weights: weights, groupJ30: groupJ30, showZero: showZero, statSort: statSort, snapLines: snapLines, fitLine: fitLine, noteStyle: noteStyle, noteThick: noteThick, noteOp: noteOp, meanOn: meanOn, meanStyle: meanStyle, meanThick: meanThick, meanOp: meanOp, bm: bm, fc: fc, fcNew: fcNew }; }
   var lastShared = JSON.stringify(sharedPrefs());
   var saveTimer = null, askedPersist = false;
   function saveLocal() {
@@ -852,6 +965,7 @@ footer {
     layout();
     updateTurns();
     updateNav();
+    updateRibbon();
     [i + 1, i + 2, i - 1].forEach(function (n) { if (n >= FIRST && n <= LAST) { var p = new Image(); p.src = pageUrl(n); } });
   }
 
@@ -861,6 +975,7 @@ footer {
     stage.style.bottom = footH + "px"; stage.style.top = headH + "px";
     $("#sides").style.bottom = footH + "px"; $("#sides").style.top = headH + "px";
     $("#history").style.top = (headH + 8) + "px";
+    $("#bmTop").style.top = (headH + 8 + 48) + "px";
     $("#topLeft").style.top = (headH + 8) + "px";
     $("#floaters").style.bottom = (footH + 10) + "px";
     var nw = img.naturalWidth || 750, nh = img.naturalHeight || 1072;
@@ -895,6 +1010,9 @@ footer {
     var t = e.target && e.target.tagName;
     if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT") return;
     if (!$("#noteDlg").hidden) { if (e.key === "Escape") cancelNote(); return; }
+    if (!$("#viewDlg").hidden) { if (e.key === "Escape") hideView(); return; }
+    if (!$("#bmDlg").hidden) { if (e.key === "Escape") hideBm(); return; }
+    if ($("#cards").classList.contains("open")) { fcKey(e); return; }
     if ($("#notes").classList.contains("open")) { if (e.key === "Escape") closeNotesSheet(); return; }
     if (acct.classList.contains("open")) { if (e.key === "Escape") closeAcct(); return; }
     if (statsSheet.classList.contains("open")) { if (e.key === "Escape") closeStats(); return; }
@@ -1337,7 +1455,7 @@ footer {
   /* icons on marks */
   var badgesEl = document.createElement("div"); badgesEl.id = "badges"; sheet.appendChild(badgesEl);
   var badgeSig = "";
-  var NOTE_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V5a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg>';
+  var NOTE_ICON = '<svg width="7" height="7" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V5a1 1 0 011-1z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></svg>';
   function updateBadges() {
     if (!badgesEl || !cssW) return;
     var gcount = {};
@@ -1348,10 +1466,10 @@ footer {
       var kinds = kindsOf(st); if (!kinds.length) return;
       var xmax = 0, ysum = 0, n = 0;
       for (var q = 0; q < st.p.length; q += 2) { xmax = Math.max(xmax, st.p[q]); ysum += st.p[q + 1]; n++; }
-      var x0 = Math.min(cssW - 14, Math.max(14, xmax * cssW)), y = Math.max(14, ysum / n * cssH - st.w * cssW / 2);
+      var x0 = Math.min(cssW - 8, Math.max(8, xmax * cssW)), y = Math.max(8, ysum / n * cssH - st.w * cssW / 2);
       kinds.forEach(function (kind) {
         var x = x0, guard = 0;
-        while (guard++ < 8 && placed.some(function (o) { return Math.abs(o.x - x) < 26 && Math.abs(o.y - y) < 22; })) x = Math.max(14, x - 28);
+        while (guard++ < 8 && placed.some(function (o) { return Math.abs(o.x - x) < 14 && Math.abs(o.y - y) < 12; })) x = Math.max(8, x - 15);
         placed.push({ x: x, y: y });
         items.push({ st: st, kind: kind, x: Math.round(x), y: Math.round(y), linked: !!(st.g && gcount[st.g] > 1) });
       });
@@ -1370,7 +1488,7 @@ footer {
       if (it.linked) label += " (linked)";
       b.setAttribute("aria-label", label); b.title = label;
       var key = strokeKey(it.st), page = idx, kind = it.kind;
-      b.addEventListener("click", function (e) { e.stopPropagation(); openNote(page, key, false, kind); });
+      b.addEventListener("click", function (e) { e.stopPropagation(); openView(page, key, kind); });
       badgesEl.appendChild(b);
     });
   }
@@ -1415,7 +1533,7 @@ footer {
         var key = strokeKey(m.st), page = m.i;
         b.addEventListener("click", function () {
           commitNote(false);
-          Promise.resolve(show(page)).then(function () { openNote(page, key, false, kind); });
+          Promise.resolve(show(page)).then(function () { openView(page, key, kind); });
         });
         box.appendChild(b);
       });
@@ -1465,6 +1583,7 @@ footer {
     var nameChanged = !!gid && gname !== (st.gn || "");
     var c = copyStroke(st);
     Object.keys(vals).forEach(function (k) { if (vals[k]) c[k] = vals[k]; else delete c[k]; });
+    if (hasMeaning(c) && !c.mid) c.mid = newMid(c, i);
     var before = strokes(i).slice(), next;
     if (nd.style !== "hl" && !hasNote(c) && !hasMeaning(c)) {
       next = before.filter(function (o) { return o !== st; });   // a border with nothing written has no reason to stay
@@ -1547,7 +1666,7 @@ footer {
   function goToMark(m, kind) {
     notesSheet.classList.remove("open"); closeMenu();
     var key = strokeKey(m.st), page = m.i;
-    Promise.resolve(show(page)).then(function () { openNote(page, key, false, kind); });
+    Promise.resolve(show(page)).then(function () { openView(page, key, kind); });
   }
   function renderNotes() {
     var list = $("#notesList"); list.innerHTML = "";
@@ -1646,9 +1765,248 @@ footer {
   $("#notesBack").addEventListener("click", closeNotesSheet);
   $("#notesSearch").addEventListener("input", renderNotes);
 
+  /* read-only view of a note or meaning, with Edit and Remove */
+  var vw = null, viewDlg = $("#viewDlg"), vwTimer = null;
+  function vwResetRemove() { clearTimeout(vwTimer); vwTimer = null; if (vw) $("#vwRemove").textContent = "Remove " + vw.kind; }
+  function openView(i, key, kind) {
+    var st = findStroke(i, key);
+    if (!st) return;
+    kind = kind || kindsOf(st)[0] || "note";
+    if (kind === "meaning" && !meanOn) kind = "note";
+    vw = { i: i, key: key, kind: kind, openedAt: Date.now() };
+    var isM = kind === "meaning";
+    $("#vwSw").style.background = st.c;
+    $("#vwTitle").textContent = isM ? "Meaning" : "Note";
+    $("#vwWhere").textContent = placeLabel(i, st);
+    $("#vwNoteBox").hidden = isM; $("#vwMean").hidden = !isM;
+    var nt = $("#vwNote"); nt.textContent = st.n || "No note written on this highlight."; nt.classList.toggle("none", !st.n);
+    var en = $("#vwEn"), ar = $("#vwAr");
+    en.textContent = st.me || "Nothing written"; en.classList.toggle("none", !st.me);
+    ar.textContent = st.ma || "Nothing written"; ar.classList.toggle("none", !st.ma);
+    $("#vwEdit").textContent = "Edit " + kind;
+    $("#vwRemove").hidden = !kindHas(st, kind);
+    vwResetRemove();
+    // everything this mark is linked to
+    var box = $("#vwLinked"); box.innerHTML = "";
+    var others = st.g ? groupMembers(st.g).filter(function (m) { return m.st !== st; }) : [];
+    $("#vwLinks").hidden = !others.length;
+    $("#vwLinkHead").textContent = others.length ? "Linked marks" + (st.gn ? " · " + st.gn : "") + " · " + (others.length + 1) + " in the group" : "";
+    others.forEach(function (m) {
+      kindsOf(m.st).forEach(function (k) {
+        var b = document.createElement("button"); b.className = "lrow";
+        b.innerHTML = '<span class="dot"></span><span class="lt"><b></b><span class="ls"></span></span>';
+        b.querySelector(".dot").style.background = m.st.c;
+        b.querySelector("b").textContent = placeLabel(m.i, m.st) + (k === "meaning" ? " · Meaning" : "");
+        b.querySelector(".ls").textContent = snippetOf(m.st, k) || "No text";
+        var ky = strokeKey(m.st), pg = m.i;
+        b.addEventListener("click", function () { hideView(); Promise.resolve(show(pg)).then(function () { openView(pg, ky, k); }); });
+        box.appendChild(b);
+      });
+    });
+    viewDlg.hidden = false;
+  }
+  function hideView() { clearTimeout(vwTimer); vwTimer = null; vw = null; viewDlg.hidden = true; if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
+  $("#vwX").addEventListener("click", hideView);
+  $("#vwClose").addEventListener("click", hideView);
+  $("#vwEdit").addEventListener("click", function () { if (!vw) return; var v = vw; hideView(); openNote(v.i, v.key, false, v.kind); });
+  $("#vwRemove").addEventListener("click", function () {
+    if (!vw) return;
+    if (!vwTimer) {   // ask once: a second tap within four seconds removes it (and Undo brings it back)
+      $("#vwRemove").textContent = "Tap again to remove";
+      vwTimer = setTimeout(vwResetRemove, 4000);
+      return;
+    }
+    var v = vw; hideView();
+    openNote(v.i, v.key, false, v.kind);
+    commitNote(true);
+  });
+  viewDlg.addEventListener("click", function (e) { if (e.target === viewDlg && vw && Date.now() - vw.openedAt > 500) hideView(); });
+
+  /* bookmarks: up to four, each on a page */
+  var BM_COLORS = ["#d9534f", "#e8a317", "#2f9e6b", "#3b82c4"];
+  var ribbon = document.createElement("button"); ribbon.id = "ribbon"; ribbon.hidden = true;
+  ribbon.innerHTML = '<svg width="22" height="38" viewBox="0 0 22 38" aria-hidden="true"><path d="M0 0h22v38l-11-9-11 9z" fill="currentColor"/></svg>';
+  sheet.appendChild(ribbon);
+  function bmLabel(p) {
+    var m = p - OFFSET;
+    if (m < 1) return "Front pages";
+    if (m > MUSHAF_PAGES) return "Back pages";
+    var c = 0; for (var k = 0; k < SURAHS.length; k++) if (SURAHS[k][1] <= m) c = k;
+    return "Page " + m + " · " + SURAHS[c][0];
+  }
+  function updateRibbon() {
+    var slot = bm.indexOf(idx);
+    ribbon.hidden = slot < 0;
+    if (slot >= 0) { ribbon.style.color = BM_COLORS[slot]; ribbon.setAttribute("aria-label", "Bookmark " + (slot + 1) + " is on this page. Tap to manage bookmarks."); }
+    $("#bmTop").classList.toggle("on", slot >= 0);
+  }
+  var bmDlg = $("#bmDlg");
+  function renderBm() {
+    $("#bmHere").textContent = "You are on: " + bmLabel(idx);
+    var list = $("#bmList"); list.innerHTML = "";
+    for (var k = 0; k < 4; k++) (function (slot) {
+      var p = bm[slot], row = document.createElement("div"); row.className = "bmrow" + (p ? " has" : "");
+      row.innerHTML = '<svg width="18" height="30" viewBox="0 0 22 38" aria-hidden="true" style="flex:none"><path d="M0 0h22v38l-11-9-11 9z" fill="' + BM_COLORS[slot] + '"/></svg><div class="dt"><b></b><span></span></div><div class="acts"></div>';
+      row.querySelector("b").textContent = "Bookmark " + (slot + 1);
+      row.querySelector("span").textContent = p ? bmLabel(p) : "Not placed";
+      var acts = row.querySelector(".acts");
+      function btn(text, cls, fn) { var b = document.createElement("button"); b.textContent = text; if (cls) b.className = cls; b.addEventListener("click", fn); acts.appendChild(b); }
+      if (p) {
+        btn("Go", "primary", function () { hideBm(); closeMenu(); show(p); });
+        if (p !== idx) btn("Move here", "", function () { placeBm(slot); });
+        btn("Remove", "", function () { bm[slot] = 0; savePrefs(); updateRibbon(); renderBm(); });
+      } else btn("Place here", "", function () { placeBm(slot); });
+      list.appendChild(row);
+    })(k);
+  }
+  function placeBm(slot) {
+    var other = bm.indexOf(idx);
+    if (other >= 0 && other !== slot) { $("#bmMsg").textContent = "This page already has Bookmark " + (other + 1) + "."; return; }
+    bm[slot] = idx; savePrefs(); updateRibbon(); $("#bmMsg").textContent = ""; renderBm();
+  }
+  function openBm() { $("#bmMsg").textContent = ""; renderBm(); bmDlg.hidden = false; bmDlg.dataset.t = String(Date.now()); }
+  function hideBm() { bmDlg.hidden = true; }
+  $("#bmTop").addEventListener("click", openBm);
+  ribbon.addEventListener("click", function (e) { e.stopPropagation(); openBm(); });
+  $("#qBm").addEventListener("click", function () { closeMenu(); openBm(); });
+  $("#bmX").addEventListener("click", hideBm);
+  $("#bmClose").addEventListener("click", hideBm);
+  bmDlg.addEventListener("click", function (e) { if (e.target === bmDlg && Date.now() - (+bmDlg.dataset.t || 0) > 500) hideBm(); });
+
+  /* flashcards from meanings: two cards for each meaning with both fields filled, spaced repetition */
+  var FC_NEW = 5, FC_STEPS = [1, 3, 7, 14, 30, 60, 120, 240], FC_AGAIN = 10 * 60 * 1000;
+  var cardsSheet = $("#cards"), fcs = null;
+  function pad2(n) { return (n < 10 ? "0" : "") + n; }
+  function dayKey() { var d = new Date(); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+  function dayStart(t) { var d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); }
+  function newMid(st, i) { var s = i + "|" + strokeKey(st), h = 5381; for (var k = 0; k < s.length; k++) h = ((h * 33) ^ s.charCodeAt(k)) >>> 0; return "m" + h.toString(36) + (st.d || 0).toString(36); }
+  // each meaning gets a steady id, so its schedule survives moving or editing it
+  function ensureMids() {
+    Object.keys(ann).forEach(function (k) {
+      var i = +k, l = strokes(i);
+      if (!l.some(function (st) { return st.k === "hl" && hasMeaning(st) && !st.mid; })) return;
+      ann[i] = { s: l.map(function (st) { if (st.k === "hl" && hasMeaning(st) && !st.mid) { var c = copyStroke(st); c.mid = newMid(st, i); return c; } return st; }), t: Date.now() };
+      saveLocal(); cloudPage(i);
+    });
+  }
+  function fcDeck() {
+    ensureMids();
+    var now = Date.now(), due = [], fresh = [], total = 0, nextDue = 0, map = {};
+    allMarks().forEach(function (m) {
+      var st = m.st; if (!st.me || !st.ma || !st.mid) return;
+      ["e", "a"].forEach(function (d) {
+        var id = st.mid + d, card = { id: id, mid: st.mid, dir: d, i: m.i, st: st, front: d === "e" ? st.me : st.ma, back: d === "e" ? st.ma : st.me };
+        map[id] = card; total++;
+        var r = fc[id];
+        if (!r) fresh.push(card); else if (r.d <= now) due.push(card); else if (!nextDue || r.d < nextDue) nextDue = r.d;
+      });
+    });
+    return { due: due, fresh: fresh, total: total, nextDue: nextDue, map: map };
+  }
+  function fcNewLeft() { return Math.max(0, FC_NEW - (fcNew.d === dayKey() ? fcNew.n : 0)); }
+  // new cards come in page order, one side of each meaning first so the answer to one is not the question of the next
+  function pickNew(fresh, n) {
+    var out = [], seen = {};
+    fresh.forEach(function (c) { if (out.length < n && !seen[c.mid]) { seen[c.mid] = 1; out.push(c); } });
+    fresh.forEach(function (c) { if (out.length < n && out.indexOf(c) < 0) out.push(c); });
+    return out;
+  }
+  function shuffle(a) { for (var k = a.length - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)), t = a[k]; a[k] = a[j]; a[j] = t; } return a; }
+  function fmtIv(d) {
+    if (d < 14) return d + (d === 1 ? " day" : " days");
+    if (d < 60) { var w = Math.round(d / 7); return w + " weeks"; }
+    var m = Math.round(d / 30); return m + " months";
+  }
+  function fcShowSection(name) { $("#fcHome").hidden = name !== "home"; $("#fcStudy").hidden = name !== "study"; }
+  function renderFcHome(doneText) {
+    var deck = fcDeck(), fresh = pickNew(deck.fresh, fcNewLeft());
+    $("#fcDue").textContent = deck.due.length; $("#fcNewN").textContent = fresh.length; $("#fcTotal").textContent = deck.total;
+    var n = deck.due.length + fresh.length, msg = $("#fcMsg");
+    $("#fcStart").hidden = !n; $("#fcStart").textContent = "Study " + n + " card" + (n === 1 ? "" : "s");
+    if (!deck.total) msg.textContent = "No cards yet. Tap Add meaning above the bottom bar, then write both the English and the Arabic. Each such meaning makes two cards.";
+    else if (!n) {
+      var when = deck.nextDue ? " Next card is due " + (dayStart(deck.nextDue) <= dayStart(Date.now()) ? "later today" : (dayStart(deck.nextDue) - dayStart(Date.now())) / 86400000 <= 1 ? "tomorrow" : "on " + new Date(deck.nextDue).toLocaleDateString()) + "." : "";
+      msg.textContent = (doneText ? doneText + " " : "") + "You are all done for now." + when;
+    } else msg.textContent = doneText || "";
+    fcShowSection("home");
+  }
+  function openCards() {
+    if (!meanOn) return;
+    closeMenu(); fcs = null;
+    renderFcHome();
+    cardsSheet.classList.add("open"); cardsSheet.scrollTop = 0;
+  }
+  function closeCards() { cardsSheet.classList.remove("open"); fcs = null; }
+  function fcStart() {
+    var deck = fcDeck(), fresh = pickNew(deck.fresh, fcNewLeft());
+    var q = shuffle(deck.due.slice()).concat(fresh).map(function (c) { return c.id; });
+    if (!q.length) { renderFcHome(); return; }
+    fcs = { q: q, map: deck.map, total: q.length, reviewed: 0, cur: null };
+    fcShowSection("study");
+    fcNext();
+  }
+  function fcNext() {
+    var c = null;
+    while (fcs.q.length && !c) c = fcs.map[fcs.q.shift()] || null;   // skip a card whose meaning was removed meanwhile
+    fcs.cur = c;
+    if (!c) { var n = fcs.reviewed; fcs = null; renderFcHome(n ? "Session finished · " + n + " review" + (n === 1 ? "" : "s") + "." : ""); return; }
+    var arFront = c.dir === "a";
+    $("#fcProg").textContent = fcs.reviewed + " done · " + (fcs.q.length + 1) + " to go";
+    $("#fcDir").textContent = arFront ? "Arabic → English" : "English → Arabic";
+    var f = $("#fcFront"), b = $("#fcBack");
+    f.textContent = c.front; b.textContent = c.back;
+    f.classList.toggle("ar", arFront); b.classList.toggle("ar", !arFront);
+    f.dir = arFront ? "rtl" : "ltr"; b.dir = arFront ? "ltr" : "rtl";
+    f.lang = arFront ? "ar" : "en"; b.lang = arFront ? "en" : "ar";
+    $("#fcWhere").textContent = placeLabel(c.i, c.st);
+    $("#fcAns").hidden = true; $("#fcGrades").hidden = true; $("#fcShow").hidden = false;
+    $("#fcShow").focus();
+  }
+  function fcReveal() {
+    if (!fcs || !fcs.cur) return;
+    var rec = fc[fcs.cur.id], s = rec ? rec.s : 0;
+    $("#fcForgotIv").textContent = "again in 10 min";
+    $("#fcGotIv").textContent = "in " + fmtIv(FC_STEPS[Math.min(s + 1, FC_STEPS.length) - 1]);
+    $("#fcAns").hidden = false; $("#fcGrades").hidden = false; $("#fcShow").hidden = true;
+  }
+  function fcGrade(got) {
+    if (!fcs || !fcs.cur || $("#fcGrades").hidden) return;
+    var c = fcs.cur, now = Date.now(), rec = fc[c.id], dk = dayKey();
+    if (!rec) { if (fcNew.d !== dk) fcNew = { d: dk, n: 0 }; fcNew.n++; }
+    var s = rec ? rec.s : 0, l = rec ? rec.l : 0;
+    if (got) { s = s + 1; fc[c.id] = { s: s, d: dayStart(now) + FC_STEPS[Math.min(s, FC_STEPS.length) - 1] * 86400000, l: l, r: now }; }
+    else { fc[c.id] = { s: Math.floor(s / 2), d: now + FC_AGAIN, l: l + 1, r: now }; fcs.q.push(c.id); }
+    fcs.reviewed++;
+    savePrefs();
+    fcNext();
+  }
+  function fcKey(e) {
+    if (e.key === "Escape") { if (fcs) renderFcHome(); else closeCards(); return; }
+    if (!fcs || !fcs.cur) return;
+    var onBtn = e.target && e.target.tagName === "BUTTON";
+    if ((e.key === " " || e.key === "Enter") && !onBtn && $("#fcGrades").hidden) { e.preventDefault(); fcReveal(); }
+    else if (!$("#fcGrades").hidden && (e.key === "1" || e.key === "ArrowLeft")) { e.preventDefault(); fcGrade(false); }
+    else if (!$("#fcGrades").hidden && (e.key === "2" || e.key === "ArrowRight")) { e.preventDefault(); fcGrade(true); }
+  }
+  $("#qCards").addEventListener("click", openCards);
+  $("#fcBtn").addEventListener("click", openCards);
+  $("#fcClose").addEventListener("click", closeCards);
+  $("#fcStart").addEventListener("click", fcStart);
+  $("#fcEnd").addEventListener("click", function () { fcs = null; renderFcHome(); });
+  $("#fcShow").addEventListener("click", fcReveal);
+  $("#fcForgot").addEventListener("click", function () { fcGrade(false); });
+  $("#fcGot").addEventListener("click", function () { fcGrade(true); });
+  $("#fcGo").addEventListener("click", function () {
+    if (!fcs || !fcs.cur) return;
+    var c = fcs.cur, key = strokeKey(c.st), i = c.i;
+    closeCards(); closeMenu();
+    Promise.resolve(show(i)).then(function () { openView(i, key, "meaning"); });
+  });
+
   /* turning meanings on or off */
   function applyMeaningUi() {
     $("#addMeaning").hidden = !meanOn;
+    $("#qCards").hidden = !meanOn; $("#fcBtn").hidden = !meanOn;
     if (!meanOn && tool === "meaning") setTool(mainTool);
     $("#meanOpts").hidden = !meanOn;
     badgeSig = ""; renderInk();
@@ -2007,7 +2365,6 @@ footer {
         var best = g[0]; g.forEach(function (st) { if (weightOf(st.c) > weightOf(best.c)) best = st; });
         var s = surahAt(m, strokeY(g[0]));
         count[s]++;
-        if (g.length > 1) repeated[s]++;
         score[s] += weightOf(best.c);
         byCol[s][best.c] = (byCol[s][best.c] || 0) + weightOf(best.c);
       });
@@ -2098,7 +2455,6 @@ footer {
         fill.appendChild(seg);
       });
       var extra = [];
-      if (x.repeated) extra.push(x.repeated + " repeated");
       if (x.fixed) extra.push(x.fixed + " fixed");
       b.querySelector(".meta").textContent = x.count + " mistake" + (x.count === 1 ? "" : "s") + (extra.length ? " (" + extra.join(", ") + ")" : "") + " · " + (x.len < 1 ? x.len.toFixed(2) : x.len.toFixed(1)) + " pages";
       b.setAttribute("aria-label", x.name + ", score " + (Math.round(x.score * 10) / 10) + ", " + fmt(x.rate) + " per page");
@@ -2303,7 +2659,7 @@ footer {
   function backupText() {
     var out = {};
     Object.keys(ann).forEach(function (k) { if (ann[k].s && ann[k].s.length) out[k] = ann[k].s; });
-    return JSON.stringify({ v: 2, notes: out, fixed: fixedLog });
+    return JSON.stringify({ v: 2, notes: out, fixed: fixedLog, bm: bm, fc: fc, fcNew: fcNew });
   }
   function importText(text) {
     var o = JSON.parse(text);
@@ -2323,6 +2679,10 @@ footer {
       });
       saveLog();
     }
+    if (Array.isArray(o.bm)) bm = cleanBm(o.bm);
+    if (o.fc) mergeFc(o.fc);
+    if (o.fcNew) mergeFcNew(o.fcNew);
+    savePrefs(); updateRibbon();
     hist = []; redoStack = [];
     renderInk(); updateUndoRedo();
     return n;
@@ -2444,7 +2804,7 @@ footer {
   // Notes are always saved on the device first. When signed in, each changed page is also
   // saved to the account; the newest version of a page wins when devices disagree.
   var FB_SDK = window.MUSHAF_FIREBASE_SDK || "https://www.gstatic.com/firebasejs/12.19.0/";
-  var fb = { app: null, au: null, fs: null, auth: null, db: null, user: null, unsub: [], dirty: {}, prefsDirty: false, timer: null, merged: false, pending: false, fromCache: true, failed: false, loading: false, loadFailed: false };
+  var fb = { app: null, au: null, fs: null, auth: null, db: null, user: null, unsub: [], dirty: {}, prefsDirty: false, timer: null, merged: false, pending: false, fromCache: true, failed: false, loading: false, loadFailed: false, authReady: false };
   var LS_PROMPTED = "mushaf-notes:v2:acctPrompted", LS_NAG = "mushaf-notes:v2:nagAt";
   var acct = $("#acct");
   // each install gets its own ID; the account remembers which one is the main device
@@ -2607,6 +2967,9 @@ footer {
     if (p.meanStyle === "border" || p.meanStyle === "hl") meanStyle = p.meanStyle;
     if (p.meanThick >= 1 && p.meanThick <= 10) meanThick = p.meanThick;
     if (p.meanOp >= 15 && p.meanOp <= 100) meanOp = p.meanOp;
+    if (Array.isArray(p.bm)) bm = cleanBm(p.bm);
+    if (p.fc) mergeFc(p.fc);
+    if (p.fcNew) mergeFcNew(p.fcNew);
     if (typeof p.swapTurn === "boolean") swapTurn = p.swapTurn;
     if (Array.isArray(p.barColors) && p.barColors.length) barColors = p.barColors;
     if (p.weights && typeof p.weights === "object") weights = p.weights;
@@ -2615,7 +2978,8 @@ footer {
     if (p.statSort) statSort = p.statSort;
     prefsT = t; lsSet(LS_PREFS_T, String(prefsT));
     savePrefs(true);
-    buildSwatches(); updateTurns(); applyMeaningUi();
+    buildSwatches(); updateTurns(); applyMeaningUi(); updateRibbon();
+    if (!$("#bmDlg").hidden) renderBm();
     if (menu.classList.contains("open")) syncMenu();
     if (statsSheet.classList.contains("open")) renderStats();
   }
@@ -2648,7 +3012,8 @@ footer {
   function hasNotes() { return fixedLog.length > 0 || Object.keys(ann).some(function (k) { return strokes(+k).length > 0; }); }
   function updateNag() {
     var due = Date.now() - (parseInt(lsGet(LS_NAG), 10) || 0) > 7 * 86400000;
-    $("#nag").hidden = !(fbConfigured() && fb.auth && !fb.user && due && $("#backHl").hidden && hasNotes());
+    // wait until Firebase has said whether someone is signed in: until then fb.user is empty even for a signed-in person
+    $("#nag").hidden = !(fbConfigured() && fb.auth && fb.authReady && !fb.user && due && $("#backHl").hidden && hasNotes());
   }
   $("#nagSignIn").addEventListener("click", function () { openAcct(false); });
   $("#nagX").addEventListener("click", function () { lsSet(LS_NAG, String(Date.now())); updateNag(); });
@@ -2743,6 +3108,7 @@ footer {
 
   function wipeLocal() {
     ann = {}; fixedLog = []; hist = []; redoStack = [];
+    bm = [0, 0, 0, 0]; fc = {}; fcNew = { d: "", n: 0 }; savePrefs(true); updateRibbon();
     lsSet(LS_NOTES, "{}"); saveLog();
     prefsT = 0; lsSet(LS_PREFS_T, "0");
     updateUndoRedo(); renderInk();
@@ -2798,6 +3164,7 @@ footer {
 
   function onUser(u) {
     stopSync();
+    fb.authReady = true;
     fb.user = u || null; fb.failed = false; fb.fromCache = true; fb.pending = false; fb.dirty = {}; fb.prefsDirty = false;
     if (!u) { fb.owner = undefined; fb.justCreated = false; }
     if (u) { lsSet(LS_PROMPTED, "1"); startSync(u); }
